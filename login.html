@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass - Login</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .login-card {
+            border-radius: 12px;
+            padding: 30px;
+            background: #ffffff;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+            max-width: 400px;
+            margin: auto;
+            margin-top: 10vh;
+            text-align: center;
+        }
+
+        .dark-mode .login-card {
+            background: #1e1e1e;
+            color: white;
+        }
+
+        .btn-primary {
+            background-color: #e67e22;
+            border: none;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        #2faAuthCard {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-light bg-light p-3">
+        <a class="navbar-brand font-weight-bold" href="#">🔒 SecurePass</a>
+        <button id="darkModeToggle" class="toggle-btn">
+            <i class="fas fa-moon"></i>
+        </button>
+    </nav>
+
+    <div class="login-card" id="userLoginCard">
+        <h3>🔒 SecurePass</h3>
+        <div id="LoginPageInfoMessage" class="alert alert-dismissible fade show"
+            style="display: none; color:red; font-weight: bold;"> </div>
+        <div class="form-group">
+            <input type="text" class="form-control" id="useremail" name="useremail" placeholder="Username or Email"
+                required>
+        </div>
+        <div class="form-group">
+            <div class="input-group">
+                <input type="password" class="form-control" name="password" id="password" placeholder="Enter password"
+                    required>
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i
+                            class="fas fa-eye"></i></button>
+                </div>
+            </div>
+        </div>
+        <a href="forgotpassword.html">Forgot Password</a> <br></br>
+        <button type="submit" name="login" id="login" class="btn btn-primary btn-block">Login</button> <br>
+        Don't have an account? <a href="register.html">Sign up</a>
+
+    </div>
+
+    <!-- Two factor authentication code div -->
+    <div class="login-card" id="2faAuthCard">
+        <h3>Verify With OTP</h3>
+        <div id="InfoMessage" class="alert alert-dismissible fade show"
+            style="display: none; color:red; font-weight: bold;"> </div>
+        <span id="2faAuthEmail"> Enter the code sent to: </span>
+        <div class="form-group">
+            <input type="text" class="form-control" id="2facode" name="2facode" placeholder="1234567890">
+        </div>
+        <button type="submit" name="validateOTP" id="validateOTP"
+            class="btn btn-primary btn-block">Validate</button><br>
+    </div>
+
+    <div class="footer">SecurePass © 2025</div>
+
+    <script src="darkmode.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.0.0-beta.1/jsencrypt.min.js"></script>
+    <script>
+        const publicKey = `-----BEGIN PUBLIC KEY-----
+                        ----- Your Public RSA Key -----
+                             -----END PUBLIC KEY-----`;
+
+        // Toggle password visibility
+        $('#togglePassword').click(function () {
+            const passwordField = $('#password');
+            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+            passwordField.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        // if 2fa is initiated
+        let currentURL = window.location.href;
+        var userLoginCard = document.getElementById("userLoginCard");
+        var twofaAuthCard = document.getElementById("2faAuthCard");
+
+        if (currentURL.includes("twofactorvalidation=true")) {
+            twofaAuthCard.style.display = "block";
+            userLoginCard.style.display = "none";
+        }
+        else {
+            twofaAuthCard.style.display = "none";
+            userLoginCard.style.display = "block";
+        }
+
+        // send login data
+        $(document).ready(function () {
+            $('#login').on('click', function () {
+                // Get form data
+                const useremailid = $('#useremail').val();
+                const userpassword = $('#password').val();
+
+                // Encrypt email and password
+                const encryptor = new JSEncrypt();
+                encryptor.setPublicKey(publicKey);
+                const encryptedUseremailid = encryptor.encrypt(useremailid);
+                const encryptedUserpassword = encryptor.encrypt(userpassword);
+
+                var formData = {
+                    username: encryptedUseremailid,
+                    password: encryptedUserpassword,
+                };
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'API/login.php',
+                    data: formData,
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log('Response received:', response);
+
+                        if (response.success) {
+                            if (response.message == 'twofactorvalidation=true') {
+
+                                console.log(response.twofauseremail);
+                                console.log(response.message);
+
+                                history.replaceState(null, "", currentURL + "?" + "twofactorvalidation=true");
+                                $('#2faAuthEmail').append(response.twofauseremail + "<br>");
+                                twofaAuthCard.style.display = "block";
+                                userLoginCard.style.display = "none";
+                            }
+                            if (response.message == 'Your account has been Locked out, Please reset your password using forgot password.') {
+
+                            }
+                            if (response.message == 'Invalid password') {
+                                $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Entered Password is Invalid').show();
+                            }
+                            if (response.message == 'User Deleted') {
+                                $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('User Deleted').show();
+                            }
+                            if (response.message == 'User locked') {
+                                $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('User locked').show();
+                            }
+                            if (response.message == 'User not found') {
+                                $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('User not found').show();
+                            }
+                            if (response.message == 'Login Success') {
+                                window.location.href = "dashboard.html";
+                            }
+                        } else {
+                            console.log(response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', xhr.responseText);
+                    }
+                });
+            });
+        });
+
+        // send 2fa code data
+        $(document).ready(function () {
+            $('#validateOTP').on('click', function () {
+                // Get form data
+                const twofacode = $('#2facode').val();
+
+                // Encrypt email and password
+                const encryptor = new JSEncrypt();
+                encryptor.setPublicKey(publicKey);
+                const encryptedTwofaCode = encryptor.encrypt(twofacode);
+
+                var formData = {
+                    validateTwofaCode: encryptedTwofaCode,
+                };
+
+                $.ajax({
+                    type: 'POST',
+                    url: 'API/login_2fa_validation.php',
+                    data: formData,
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log('Response received:', response);
+
+                        if (response.success) {
+                            if (response.message == 'twofactorvalidation=success') {
+                                window.location.href = "dashboard.html";
+                            }
+                        } else {
+                            console.log(response.message);
+                            if (response.message == 'Entered Two Factor Authentication Code is Invalid') {
+                                $('#InfoMessage').removeClass('alert-success').addClass('alert-danger').html('Entered 2FA Code is Invalid').show();
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error:', xhr.responseText);
+                    }
+                });
+            });
+        });
+
+        // send request to check sessions
+        $(document).ready(function () {
+            $.ajax({
+                url: "API/check_and_maintain_session_and_cookies.php",
+                method: "POST",
+                dataType: "json",
+                success: function (response) {
+                    if (response.message === "logged_in") {
+                        window.location.href = "dashboard.html";
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', xhr.responseText);
+                }
+            });
+        });
+
+    </script>
+</body>
+
+</html>
