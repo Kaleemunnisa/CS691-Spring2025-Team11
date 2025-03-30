@@ -66,33 +66,33 @@
 
     <div class="login-card">
         <h3>🔒 SecurePass</h3>
-        <form>
-            <div class="form-group">
-                <input type="text" class="form-control" name="firstname" placeholder="First Name">
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="lastname" placeholder="Last Name">
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="useremail" placeholder="Username or Email">
-            </div>
-            <div class="form-group">
-                <div class="input-group">
-                    <input type="password" class="form-control" name="password" id="password"
-                        placeholder="Enter password">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i
-                                class="fas fa-eye"></i></button>
-                    </div>
+        <div id="registerPageInfoMessage" class="alert alert-dismissible fade show" style="display: none;">
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" id="firstname" name="firstname" placeholder="First Name">
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" id="lastname" name="lastname" placeholder="Last Name">
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" id="useremail" name="useremail" placeholder="Username or Email">
+        </div>
+        <div class="form-group">
+            <div class="input-group">
+                <input type="password" class="form-control" name="password" id="password" placeholder="Enter password">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword"><i
+                            class="fas fa-eye"></i></button>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Sign up</button> <br>
-            Already have an account? <a href="login.html">Login</a>
-        </form>
+        </div>
+        <button type="submit" id="signUp" class="btn btn-primary btn-block">Sign up</button> <br>
+        Already have an account? <a href="login.html">Login</a>
     </div>
     <div class="footer">SecurePass © 2025</div>
 
     <script src="darkmode.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.0.0-beta.1/jsencrypt.min.js"></script>
     <script>
         // Toggle password visibility
         $('#togglePassword').click(function () {
@@ -117,6 +117,96 @@
                     console.error('Error:', xhr.responseText);
                 }
             });
+
+            let publicKey = '';
+
+            // Load Config File
+            function loadConfig() {
+                return fetch('config.env')
+                    .then(response => response.text())
+                    .then(text => {
+                        let lines = text.split('\n');
+                        for (let line of lines) {
+                            let [key, value] = line.split('=').map(s => s.trim());
+                            if (key === 'RSAPUBLICKEY') {
+                                let publicKey = value.replace(/['"]/g, ''); // Remove quotes if present
+                                return publicKey; // Return the key
+                            }
+                        }
+                        throw new Error("RSAPUBLICKEY not found in config.env");
+                    })
+                    .catch(error => console.error('Error loading config:', error));
+            }
+
+            // Now, use the returned value:
+            loadConfig().then(publicKey => {
+                console.log("RSAPUBLICKEY:", publicKey);
+
+                // Send details to API
+                $("#signUp").click(function () {
+
+                    const userpassword = $('#password').val();
+
+                    // Encrypt email and password
+                    const encryptor = new JSEncrypt();
+                    encryptor.setPublicKey(publicKey);
+                    const encryptedUserpassword = encryptor.encrypt(userpassword);
+
+                    var formData = {
+                        firstname: $("#firstname").val(),
+                        lastname: $("#lastname").val(),
+                        useremail: $("#useremail").val(),
+                        password: encryptedUserpassword
+                    };
+
+                    $.ajax({
+                        type: "POST",
+                        url: "API/register.php",
+                        data: formData,
+                        dataType: "json",
+                        success: function (response) {
+                            if (response.message == "user already exists") {
+                                console.log('Error: User with email exists!');
+                                // Show error
+                                $('#registerPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error: User with email exists!').show();
+
+                                setTimeout(function () {
+                                    $('#registerPageInfoMessage').hide();
+                                }, 2000);
+                            }
+                            if (response.message == "user registration failed") {
+                                console.log('Error: User registration failed');
+                                // Show error
+                                $('#registerPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error: user registration failed').show();
+
+                                setTimeout(function () {
+                                    $('#registerPageInfoMessage').hide();
+                                }, 2000);
+                            }
+                            if (response.message == "user registration sucessful") {
+                                console.log('New Account created successfully.');
+                                // Clear values in Registration Form
+                                $('#firstname').val('');
+                                $('#lastname').val('');
+                                $('#useremail').val('');
+                                $('#password').val('');
+
+                                // Show success
+                                $('#registerPageInfoMessage').removeClass('alert-danger').addClass('alert-success').html('New Account created successfully.').show();
+
+                                setTimeout(function () {
+                                    $('#registerPageInfoMessage').hide();
+                                }, 2000);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.log("Error: Cannot create account");
+                        }
+                    });
+                });
+
+            });
+
         });
     </script>
 </body>

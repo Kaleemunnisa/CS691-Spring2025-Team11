@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .sidebar {
+            width: 250px;
+            position: fixed;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.1);
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .sidebar.collapsed {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .sidebar a {
+            padding: 10px;
+            text-decoration: none;
+            font-size: 18px;
+            color: black;
+            display: block;
+        }
+
+        .sidebar a:hover {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        .content {
+            margin-left: 260px;
+            padding: 20px;
+            transition: margin-left 0.3s;
+        }
+
+        .content.expanded {
+            margin-left: 0;
+        }
+
+        .btn-primary {
+            background-color: #e67e22;
+            border: none;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode .sidebar {
+            background: #1e1e1e;
+        }
+
+        .dark-mode .sidebar a {
+            color: rgb(255, 253, 253);
+        }
+
+        .dark-mode .sidebar a:hover {
+            background-color: #e67e22;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-light p-3">
+        <button id="toggleSidebar" class="btn btn-sm btn-outline-secondary">☰</button>
+        <a class="navbar-brand font-weight-bold ml-2" href="dashboard.html">
+            <h3>🔒 SecurePass</h3>
+        </a>
+        <button id="darkModeToggle" class="toggle-btn">
+            <i class="fas fa-moon"></i>
+        </button>
+    </nav>
+
+    <div class="sidebar" id="sidebar">
+        <a href="dashboard.html">🏠 Home</a>
+        <a href="#" data-toggle="collapse" data-target="#passwordMenu">🔒 Vault <i class="fas fa-chevron-down"></i></a>
+        <div id="passwordMenu" class="collapse pl-3">
+            <a href="passwords.html">🔑 Passwords</a>
+            <a href="#">📝 Notes</a>
+            <a href="#">📖 Address Book</a>
+            <a href="#">💳 Cards</a>
+        </div>
+        <a href="#" data-toggle="collapse" data-target="#sharingcenterMenu">📤 Sharing Center <i
+                class="fas fa-chevron-down"></i></a>
+        <div id="sharingcenterMenu" class="collapse pl-3">
+            <a href="#">👥 Shared with me</a>
+            <a href="#">🔄 Shared with others</a>
+            <a href="#">🌐 Shared externally</a>
+        </div>
+        <a href="#" data-toggle="collapse" data-target="#settingsMenu">⚙️ Settings <i
+                class="fas fa-chevron-down"></i></a>
+        <div id="settingsMenu" class="collapse pl-3">
+            <a href="#">👤 Profile</a>
+            <a href="#">🔐 Security</a>
+            <a href="API/logout.php">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="content" id="content">
+        <h2>Welcome to the Dashboard</h2>
+        <p>Here you can manage your passwords and settings efficiently.</p>
+    </div>
+
+    <div class="footer">SecurePass © 2025</div>
+
+    <script src="darkmode.js"></script>
+    <script>
+        $("#toggleSidebar").click(function () {
+            $("#sidebar").toggleClass("collapsed");
+            $("#content").toggleClass("expanded");
+        });
+
+        // send request to check sessions
+        $(document).ready(function () {
+            $.ajax({
+                url: "API/check_and_maintain_session_and_cookies.php",
+                method: "POST",
+                dataType: "json",
+                success: function (response) {
+                    if (response.message === "not_logged_in") {
+                        window.location.href = "login.html";
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', xhr.responseText);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
