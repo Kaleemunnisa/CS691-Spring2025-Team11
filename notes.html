@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass - Notes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .notes-card {
+            border-radius: 12px;
+            padding: 15px;
+            background: #ffffff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #e67e22;
+            border: none;
+        }
+
+        .footer {
+            background-color: #f4e1c6;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+        }
+
+        .modal-Text {
+            color: rgb(0, 0, 0);
+        }
+
+        .close {
+            color: rgb(0, 0, 0);
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .selected {
+            border: 2px solid #000;
+        }
+
+        .checkmark {
+            display: none;
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+            position: absolute;
+        }
+
+        .selected .checkmark {
+            display: block;
+        }
+
+        .card-bottom-line {
+            height: 4px;
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode .notes-card {
+            background: #1e1e1e;
+            color: white;
+        }
+
+        .dark-mode .footer {
+            background-color: #333;
+        }
+
+        .dark-mode .modal-content {
+            background-color: #1e1e1e;
+        }
+
+        .dark-mode .modal-Text {
+            color: rgb(255, 255, 255);
+        }
+
+        .dark-mode .close {
+            color: rgb(255, 255, 255);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-light p-3">
+        <a class="navbar-brand font-weight-bold" href="dashboard.html">🔒 SecurePass</a>
+        <input type="text" id="searchInput" class="form-control w-25" placeholder="Search Notes..."
+            onkeyup="searchNotes()">
+        <button id="darkModeToggle" class="toggle-btn">
+            <i class="fas fa-moon"></i>
+        </button>
+    </nav>
+
+    <div class="container mt-4">
+        <button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addNotesModal">Add New
+            Notes</button>
+
+        <!-- Filter Button -->
+        <div class="mb-3">
+            <select id="filterGroup" class="form-control w-25 d-inline-block">
+                <!-- Groups -->
+                <option value="all">All Groups</option>
+            </select>
+            <button class="btn btn-primary" onclick="filterNotes()">Filter</button>
+        </div>
+
+        <div class="notes" id="notes">
+            <!-- Password Cards -->
+        </div>
+
+    </div>
+
+    <div class="footer">SecurePass © 2025</div>
+
+    <!-- Show Notes modal -->
+    <div class="modal fade" id="notesModal" tabindex="-1" role="dialog" aria-labelledby="notesModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+
+                    <div class="viewNotesDiv" id="viewNotesDiv">
+
+                        <h5 class="text-center"> View Notes </h5>
+
+                        <div id="editNotesInfoMessage" class="alert alert-dismissible fade show" style="display: none;">
+                        </div>
+                        <div id="deleteNotesInfoMessage" class="alert alert-dismissible fade show"
+                            style="display: none;"> </div>
+
+                        <input type="hidden" id="viewNotesId" name="viewNotesId">
+                        <div class="form-group">
+                            <label for="viewNotesGroup">Group</label>
+                            <input type="text" class="form-control" id="viewNotesGroupValue" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="viewNotesTitle"> Notes Title </label>
+                            <input type="text" class="form-control" id="viewNotesTitle" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="viewNotes">Notes</label>
+                            <textarea class="form-control" id="viewNotes" rows="9" disabled></textarea>
+                        </div>
+                    </div>
+
+                    <div class="editNotesDiv" id="editNotesDiv" style="display:none;">
+
+                        <h5 class="text-center"> Edit Notes </h5>
+
+                        <div class="form-group">
+                            <label for="group">Group</label>
+                            <select id="group" class="form-control">
+                                <!-- Groups -->
+                                <option value="new">Add New Group</option>
+                            </select>
+                            <input type="text" class="form-control mt-2 d-none" id="newGroup"
+                                placeholder="Enter new group name">
+                        </div>
+                        <div class="form-group">
+                            <label for="editNotesTitle"> Notes Title </label>
+                            <input type="text" class="form-control" id="editNotesTitle">
+                        </div>
+                        <div class="form-group">
+                            <label for="editNotes">Notes</label>
+                            <textarea class="form-control" id="editNotes" rows="9"></textarea>
+                        </div>
+
+                        <div class="color-picker" id="viewColorPicker">
+                            <div class="color-option selected" style="background-color: orange;" data-color="orange">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: red;" data-color="red">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: yellow;" data-color="yellow">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: green;" data-color="green">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: blue;" data-color="blue">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: gray;" data-color="gray">
+                                <span class="checkmark">✔</span>
+                            </div>
+                        </div>
+                        <br>
+
+                        <input type="hidden" id="editNotesId" name="editNotesId">
+                    </div>
+
+                    <button class="btn btn-primary" id="editNotesBtn">Edit</button>
+                    <button class="btn btn-success" id="saveNotesBtn" style="display:none;">Save</button>
+                    <button class="btn btn-danger" id="deleteNotesBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Add Notes Modal -->
+    <div class="modal fade" id="addNotesModal" tabindex="-1" role="dialog" aria-labelledby="addNotesModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+
+                    <div class="addNewNotes" id="addNewNotes">
+
+                        <h5 class="text-center"> Add New Notes </h5>
+
+                        <div id="addNewNotesInfoMessage" class="alert alert-dismissible fade show"> </div>
+
+                        <div class="form-group">
+                            <label for="addNewGroup">Group</label>
+                            <select id="addNewGroup" class="form-control">
+                                <!-- Groups -->
+                                <option value="new">Add New Group</option>
+                            </select>
+                            <input type="text" class="form-control mt-2 d-none" id="addNewGroupCreate"
+                                placeholder="Enter new group name">
+                        </div>
+                        <div class="form-group">
+                            <label for="addNewNotesTitle"> Notes Title </label>
+                            <input type="text" class="form-control" id="addNewNotesTitle">
+                        </div>
+                        <div class="form-group">
+                            <label for="addNewNotesContent">Notes</label>
+                            <textarea class="form-control" id="addNewNotesContent" rows="9"></textarea>
+                        </div>
+                        <div class="color-picker">
+                            <div class="color-option selected" style="background-color: orange;" data-color="orange">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: red;" data-color="red">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: yellow;" data-color="yellow">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: green;" data-color="green">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: blue;" data-color="blue">
+                                <span class="checkmark">✔</span>
+                            </div>
+                            <div class="color-option" style="background-color: gray;" data-color="gray">
+                                <span class="checkmark">✔</span>
+                            </div>
+                        </div>
+                        <br>
+                    </div>
+                    <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button id="addNewNotesBtn" class="btn btn-primary">Add Notes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="darkmode.js"></script>
+    <script>
+
+        // color selector
+        var selectedColor = "orange"; // Default selected color
+
+        document.querySelectorAll(".color-option").forEach(option => {
+            option.addEventListener("click", function () {
+                document.querySelectorAll(".color-option").forEach(el => el.classList.remove("selected"));
+                this.classList.add("selected");
+
+                // Store selected color in JavaScript variable
+                selectedColor = this.getAttribute("data-color");
+            });
+        });
+
+        function resetColorSelection(colorToSelect = "orange") {
+            // Remove 'selected' class from all color options
+            document.querySelectorAll(".color-option").forEach(el => el.classList.remove("selected"));
+
+            // Find the desired color option and add 'selected' class to it
+            const target = document.querySelector(`.color-option[data-color="${colorToSelect}"]`);
+            if (target) {
+                target.classList.add("selected");
+            }
+
+            // Optional: update your hidden input or JS variable if you're using one
+            const colorInput = document.getElementById("selectedColorInput");
+            if (colorInput) {
+                colorInput.value = colorToSelect;
+            }
+
+            // If using a JS variable instead:
+            selectedColor = colorToSelect;
+        }
+
+        function selectColorInViewPicker(colorToSelect) {
+            const picker = document.getElementById("viewColorPicker");
+
+            if (!picker) return;
+
+            // Remove 'selected' class from all child options
+            picker.querySelectorAll(".color-option").forEach(el => el.classList.remove("selected"));
+
+            // Add 'selected' class to the matching color
+            const target = picker.querySelector(`.color-option[data-color="${colorToSelect}"]`);
+            if (target) {
+                target.classList.add("selected");
+            }
+        }
+
+        function getSelectedColor() {
+            return $('#viewColorPicker .color-option.selected').data('color');
+        }
+
+        var notesData = { data: [] }; // Global object to store Notes data
+
+        // send request to check sessions
+        $(document).ready(function () {
+            $.ajax({
+                url: "API/check_and_maintain_session_and_cookies.php",
+                method: "POST",
+                dataType: "json",
+                success: function (response) {
+                    if (response.message === "not_logged_in") {
+                        window.location.href = "login.html";
+                    }
+                    else {
+                        let sendNotesData = new FormData();
+                        sendNotesData.append('fetchnotesdata', 'true');
+
+                        fetch('API/notes.php', {
+                            method: 'POST',
+                            body: sendNotesData
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    notesData.data = data.data;
+                                    console.log("Data received:", notesData.data);
+                                    let myNotesDiv = document.getElementById("notes");
+                                    let selectGroupElement = document.getElementById("filterGroup");
+                                    let addPasswordGroupElement = document.getElementById("group");
+                                    let addNewAccountGroupElement = document.getElementById("addNewGroup");
+
+                                    let uniqueGroups = [...new Set(notesData.data.map(row => row.GroupName))];
+
+                                    uniqueGroups.forEach(GroupName => {
+                                        let selectHTML = `
+                                                        <option value="${GroupName}">${GroupName}</option>
+                                                    `;
+
+                                        // Append card to the div
+                                        selectGroupElement.innerHTML += selectHTML;
+
+                                        let selectGroupHTML = `
+                                                        <option value="${GroupName}">${GroupName}</option>
+                                                    `;
+
+                                        // Append card to the div
+                                        addPasswordGroupElement.innerHTML += selectGroupHTML;
+
+                                        let selectGroupForAddNewAccountHTML = `
+                                                        <option value="${GroupName}">${GroupName}</option>
+                                                    `;
+
+                                        // Append card to the div
+                                        addNewAccountGroupElement.innerHTML += selectGroupForAddNewAccountHTML;
+                                    });
+
+                                    data.data.forEach(row => {
+
+                                        if (row.IsNotesShared == 1) {
+                                            var ShareIcon = '<span class="d-inline-block" tabindex="0" data-toggle="SharePopover" data-placement="top"  data-content="You are sharing this account with others.">&nbsp&nbsp<i class="fa-solid fa-users"></i></span>';
+                                        }
+                                        else {
+                                            var ShareIcon = '';
+                                        }
+                                        let cardHTML = `
+                                                        <div class="notes-card p-3 mb-3 position-relative" 
+                                                            data-uuid="${row.ID}"
+                                                            data-group="${row.GroupName}" 
+                                                            data-title="${row.Title}" 
+                                                            data-notes="${row.Notes}" 
+                                                            data-colorGroup="${row.ColourGroup}">
+                                                            
+                                                            <h5 class="notes-title"><b>${row.Title}</b>
+                                                                ${ShareIcon}
+                                                            </h5>
+                                                            <p class="text-muted notes-content"> ${row.Notes}</p>
+                                                            <div class="card-bottom-line" style="background-color: ${row.ColourGroup};" ></div>
+                                                        </div>
+                                                    `;
+
+                                        // Append card to the div
+                                        myNotesDiv.innerHTML += cardHTML;
+
+                                        // Show data if notes card is clicked
+                                        $(document).ready(function () {
+                                            $('.notes-card').click(function () {
+                                                // Get data from the clicked card
+                                                var ID = $(this).data('uuid');
+                                                var group = $(this).data('group');
+                                                var title = $(this).data('title');
+                                                var notes = $(this).data('notes');
+                                                var colorGroup = $(this).attr('data-colorGroup');
+
+                                                // Set data inside modal
+                                                $('#viewNotesId').val(ID);
+                                                $('#viewNotesGroupValue').val(group);
+                                                $('#viewNotesTitle').val(title);
+                                                $('#viewNotes').val(notes);
+                                                selectColorInViewPicker(colorGroup); // Selects the color in color-picker
+
+                                                // Show the modal
+                                                $('#notesModal').modal('show');
+                                            });
+                                        });
+
+                                    });
+                                } else {
+                                    console.error("Error:", data.message);
+                                }
+                            })
+                            .catch(error => console.error('Fetch Error:', error));
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', xhr.responseText);
+                }
+            });
+        });
+
+
+        var editNotesDiv = document.getElementById("editNotesDiv");
+        var viewNotesDiv = document.getElementById("viewNotesDiv");
+        var editNotesBtn = document.getElementById("editNotesBtn");
+        var saveNotesBtn = document.getElementById("saveNotesBtn");
+
+        $('#editNotesBtn').click(function () {
+            $('#editNotesDiv').show();
+            $('#viewNotesDiv').hide();
+            $('#editNotesBtn').hide();
+            $('#saveNotesBtn').show();
+
+            $('#editNotesId').val($('#viewNotesId').val());
+            $('#group').val($('#viewNotesGroupValue').val()).trigger('change');
+            $('#editNotesTitle').val($('#viewNotesTitle').val());
+            $('#editNotes').val($('#viewNotes').val());
+
+        });
+
+        // Save edited Notes details
+        $('#saveNotesBtn').click(function () {
+
+            let editNotesSelectedColor = getSelectedColor();
+
+            // Get form data
+            var formData = {
+                group: $('#group').val(),
+                newGroup: $('#newGroup').val(),
+                Title: $('#editNotesTitle').val(),
+                Notes: $('#editNotes').val(),
+                ColourGroup: editNotesSelectedColor,
+                ID: $('#editNotesId').val(),
+                saveEditedNotes: true,
+            };
+            console.log(formData);
+            $.ajax({
+                type: 'POST',
+                url: 'API/notes.php',
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        if (response.message == 'saveEditedNotes=true') {
+                            // Show success message in the modal
+                            $('#editNotesInfoMessage').removeClass('alert-danger').addClass('alert-success').html('Notes saved successfully.').show();
+
+                            $('#editNotesDiv').hide();
+                            $('#viewNotesDiv').show();
+                            $('#editNotesBtn').show();
+                            $('#saveNotesBtn').hide();
+
+                            setTimeout(function () {
+                                $('#editNotesInfoMessage').hide();
+
+                                $('#viewNotesGroupValue').val(formData.group).trigger('change');
+                                $('#viewNotesTitle').val(formData.Title);
+                                $('#viewNotes').val(formData.Notes);
+                                selectColorInViewPicker(formData.ColourGroup);
+
+                                let card = $(`.notes-card[data-uuid="${formData.ID}"]`);
+                                let selectedFilterGroup = $('#filterGroup').val();
+                                let newGroupName = formData.newGroup.trim();
+
+                                // Update card attributes
+                                card.attr('data-uuid', formData.ID);
+                                if (newGroupName !== "") {
+                                    card.attr('data-group', formData.newGroup);
+                                } else {
+                                    card.attr('data-group', formData.group);
+                                }
+                                card.attr('data-title', formData.Title);
+                                card.attr('data-notes', formData.Notes);
+                                card.attr('data-colorGroup', formData.ColourGroup);
+
+                                // Also update jQuery's cached data properties
+                                card.data('ID', formData.ID);
+                                if (newGroupName !== "") {
+                                    card.data('group', formData.newGroup);
+                                } else {
+                                    card.data('group', formData.group);
+                                }
+                                card.data('title', formData.Title);
+                                card.data('notes', formData.Notes);
+                                card.data('colorGroup', formData.ColourGroup);
+
+                                // Update card content
+                                card.find('.notes-title').html(`<b>${formData.Title}</b>`);
+                                card.find('.notes-content').text(`${formData.Notes}`);
+                                card.find('.card-bottom-line').css('background-color', formData.ColourGroup);
+
+                                // **Update notesData.data[]**
+                                let itemIndex = notesData.data.findIndex(item => item.ID == formData.ID);
+                                if (itemIndex !== -1) {
+                                    notesData.data[itemIndex].ID = formData.ID;
+                                    notesData.data[itemIndex].GroupName = formData.group;
+                                    notesData.data[itemIndex].Title = formData.Title;
+                                    notesData.data[itemIndex].Notes = formData.Notes;
+                                    notesData.data[itemIndex].ColourGroup = formData.ColourGroup;
+                                }
+
+                                // **Update the dropdowns with new group if applicable**
+                                if (newGroupName !== "") {
+                                    let groupDropdown = $('#filterGroup');
+                                    let editGroupDropdown = $('#group');
+
+                                    // Check if the new group already exists
+                                    if (groupDropdown.find(`option[value="${newGroupName}"]`).length === 0) {
+                                        let newOption = `<option value="${newGroupName}">${newGroupName}</option>`;
+
+                                        // Add to filter dropdown
+                                        groupDropdown.append(newOption);
+
+                                        // Add to edit modal group dropdown
+                                        editGroupDropdown.append(newOption);
+                                    }
+                                }
+
+                                // Apply filter again to hide/show the updated card
+                                filterNotes();
+
+                                console.log("Notes saved successfully.");
+
+                            }, 2000);
+                        }
+                        if (response.message == 'failed to save notes') {
+                            console.log(response.message);
+                            setTimeout(function () {
+                                // Show error message in the modal
+                                $('#editNotesInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error saving Notes.').show();
+                            }, 2000);
+                        }
+                    } else {
+                        console.log(response.message);
+                        setTimeout(function () {
+                            // Show error message in the modal
+                            $('#editNotesInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error saving Notes.').show();
+                        }, 2000);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', xhr.responseText);
+                }
+            });
+        });
+
+        // Add New Notes
+        $('#addNewNotesBtn').click(function () {
+
+            console.log("Selected Color Before Sending:", selectedColor); // Debug check
+
+            // Get form data
+            var formData = {
+                group: $('#addNewGroup').val(),
+                newGroup: $('#addNewGroupCreate').val(),
+                Title: $('#addNewNotesTitle').val(),
+                Notes: $('#addNewNotesContent').val(),
+                ColourGroup: selectedColor,
+                addNewNotes: true,
+            };
+            console.log("New Note's Details to save:");
+            console.log(formData);
+            $.ajax({
+                type: 'POST',
+                url: 'API/notes.php',
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        if (response.message == 'addNewNotes=true') {
+                            // Create the new notes object
+                            let newNotesObj = {
+                                ID: response.id,  // Assuming the API returns the new ID
+                                group: formData.newGroup ? formData.newGroup : formData.group,
+                                Title: formData.Title,
+                                Notes: formData.Notes,
+                                ColourGroup: formData.ColourGroup
+                            };
+
+                            // Add to notesData.data
+                            notesData.data.push(newNotesObj);
+
+                            // Create a new notes card
+                            let newCard = `
+                                            <div class="notes-card p-3 mb-3 position-relative" 
+                                                data-uuid="${newNotesObj.ID}"
+                                                data-group="${newNotesObj.group}" 
+                                                data-title="${newNotesObj.Title}" 
+                                                data-notes="${newNotesObj.Notes}" 
+                                                data-colorGroup="${newNotesObj.ColourGroup}">
+
+                                                <h5 class="notes-title"><b>${newNotesObj.Title}</b></h5>
+                                                <p class="text-muted notes-content"> ${newNotesObj.Notes}</p>
+                                                <div class="card-bottom-line" style="background-color: ${newNotesObj.ColourGroup};" ></div>
+                                            </div>
+                                        `;
+                            console.log(newNotesObj.ColourGroup);
+
+                            // Append the new card only if it's in the current filter group
+                            if ($("#filterGroup").val() === "all" || $("#filterGroup").val() === newNotesObj.group) {
+                                $("#notes").append(newCard);
+                            }
+
+                            // Add new group to filter dropdown and edit modal select if needed
+                            let groupToAdd = newNotesObj.group;
+                            if ($(`#filterGroup option[value="${groupToAdd}"]`).length === 0) {
+                                $("#filterGroup, #editNotesGroup").append(
+                                    `<option value="${groupToAdd}">${groupToAdd}</option>`
+                                );
+                            }
+
+                            $(document).on("click", ".notes-card", function () {
+                                let card = $(this);
+
+                                var ID = $(this).data('uuid');
+                                var group = $(this).data('group');
+                                var title = $(this).data('title');
+                                var notesContent = $(this).data('notes');
+                                var colorGroup = $(this).attr('data-colorGroup');
+
+                                // Set data inside modal
+                                $('#viewNotesId').val(ID);
+                                $('#viewNotesGroupValue').val(group);
+                                $('#viewNotesTitle').val(title);
+                                $('#viewNotes').val(notesContent);
+                                selectColorInViewPicker(colorGroup); // Selects the color in color-picker
+
+
+                                $("#notesModal").modal("show");
+                            });
+
+                            // Show success message
+                            $('#addNewNotesInfoMessage').removeClass('alert-danger').addClass('alert-success').html('New Notes added successfully.').show();
+
+                            setTimeout(function () {
+                                $('#addNewNotesInfoMessage').hide();
+
+                                $('#addNewGroup').val("");
+                                $('#addNewGroupCreate').val("");
+                                $('#addNewNotesTitle').val("");
+                                $('#addNewNotesContent').val("");
+                                // Reset Colour to Orange
+                                resetColorSelection();
+
+                            }, 2000);
+                            console.log("New Notes added successfully.");
+                        }
+                    } else {
+                        // Show error message in the modal
+                        $('#addNewNotesInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error adding new notes.').show();
+                        console.log(response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', xhr.responseText);
+                }
+            });
+        });
+
+        // Delete Notes
+        $('#deleteNotesBtn').click(function () {
+            // Get form data
+            var formDeleteData = {
+                ID: $('#viewNotesId').val(),
+                deleteNotes: true,
+            };
+            console.log("Notes to be deleted with ID:");
+            console.log(formDeleteData);
+            $.ajax({
+                type: 'POST',
+                url: 'API/notes.php',
+                data: formDeleteData,
+                dataType: 'json',
+                success: function (response) {
+                    if (response.success) {
+                        if (response.message == 'deleteNotes=success') {
+
+                            // Remove the notes card from the DOM
+                            $(`.notes-card[data-uuid="${formDeleteData.ID}"]`).remove();
+
+                            // Remove from notesData.data
+                            notesData.data = notesData.data.filter(item => item.ID !== formDeleteData.ID);
+
+                            $('#editNotesDiv').hide();
+                            $('#viewNotesDiv').show();
+                            $('#editNotesBtn').show();
+                            $('#saveNotesBtn').hide();
+
+                            // Show success message in the modal
+                            $('#deleteNotesInfoMessage').removeClass('alert-danger').addClass('alert-success').html('Deleted Notes successfully.').show();
+
+                            setTimeout(function () {
+                                $('#deleteNotesInfoMessage').hide();
+                                // Close the modal
+                                $('#notesModal').modal('hide');
+                            }, 2000);
+                            console.log("Deleted Notes successfully.");
+                        }
+                    } else {
+                        // Show error message in the modal
+                        $('#deleteNotesInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error deleting Notes.').show();
+                        console.log(response.message);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error:', xhr.responseText);
+                }
+            });
+        });
+
+        // Filter notes by group
+        function filterNotes() {
+            const selectedGroup = document.getElementById("filterGroup").value;
+            const cards = document.querySelectorAll(".notes-card");
+
+            cards.forEach(card => {
+                if (selectedGroup === "all" || card.dataset.group === selectedGroup) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        // Show/Hide new group input for edit notes modal
+        $('#group').change(function () {
+            if ($(this).val() === 'new') {
+                $('#newGroup').removeClass('d-none');
+            } else {
+                $('#newGroup').addClass('d-none');
+            }
+        });
+
+        // Show/Hide new group input for add notes modal
+        $('#addNewGroup').change(function () {
+            if ($(this).val() === 'new') {
+                $('#addNewGroupCreate').removeClass('d-none');
+            } else {
+                $('#addNewGroupCreate').addClass('d-none');
+            }
+        });
+
+        // clear fields in edit accounts notes modal before closing
+        $('#notesModal').on('hidden.bs.modal', function () {
+            $(this).find('#editNotesDiv').find('input, textarea, select').val('');
+            // Hide Edit section and only show view section
+            $('#editNotesDiv').hide();
+            $('#viewNotesDiv').show();
+            $('#editNotesBtn').show();
+            $('#saveNotesBtn').hide();
+            // Reset Colour to Orange
+            resetColorSelection();
+        });
+
+        // clear fields in Add new account notes modal before closing
+        $('#addNotesModal').on('hidden.bs.modal', function () {
+            $(this).find('#addNewNotes').find('input, textarea, select').val('');
+            // Reset Colour to Orange
+            resetColorSelection();
+        });
+
+        $(document).ready(function () {
+            $('[data-toggle="SharePopover"]').popover({
+                trigger: 'hover'
+            });
+        });
+
+        // Search Notes
+        function searchNotes() {
+            const searchValue = document.getElementById("searchInput").value.toLowerCase();
+            const cards = document.querySelectorAll(".notes-card");
+
+            cards.forEach(card => {
+                const searchAppname = card.querySelector(".notes-title").textContent.toLowerCase();
+                const searchUsername = card.querySelector(".notes-content").textContent.toLowerCase();
+
+                if (searchAppname.includes(searchValue)) {
+                    card.style.display = "block";
+                } else if (searchUsername.includes(searchValue)) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
