@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass - Address Book</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .notes-card {
+            border-radius: 12px;
+            padding: 15px;
+            background: #ffffff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #e67e22;
+            border: none;
+        }
+
+        .footer {
+            background-color: #f4e1c6;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+        }
+
+        .modal-Text {
+            color: rgb(0, 0, 0);
+        }
+
+        .close {
+            color: rgb(0, 0, 0);
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 10px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .selected {
+            border: 2px solid #000;
+        }
+
+        .checkmark {
+            display: none;
+            color: black;
+            font-size: 20px;
+            font-weight: bold;
+            position: absolute;
+        }
+
+        .selected .checkmark {
+            display: block;
+        }
+
+        .card-bottom-line {
+            height: 4px;
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode .notes-card {
+            background: #1e1e1e;
+            color: white;
+        }
+
+        .dark-mode .footer {
+            background-color: #333;
+        }
+
+        .dark-mode .modal-content {
+            background-color: #1e1e1e;
+        }
+
+        .dark-mode .modal-Text {
+            color: rgb(255, 255, 255);
+        }
+
+        .dark-mode .close {
+            color: rgb(255, 255, 255);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-light p-3">
+        <a class="navbar-brand font-weight-bold" href="dashboard.html">🔒 SecurePass</a>
+        <input type="text" id="searchInput" class="form-control w-25" placeholder="Search Address Book..."
+            onkeyup="searchAddress()">
+        <button id="darkModeToggle" class="toggle-btn">
+            <i class="fas fa-moon"></i>
+        </button>
+    </nav>
+
+    <div class="container mt-4">
+        <button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addAddressModal">Add New
+            Address</button>
+
+        <!-- Filter Button -->
+        <div class="mb-3">
+            <select id="filterGroup" class="form-control w-25 d-inline-block">
+                <!-- Groups -->
+                <option value="all">All Groups</option>
+            </select>
+            <button class="btn btn-primary" onclick="filterAddress()">Filter</button>
+        </div>
+
+        <div class="addressBook" id="addressBook">
+            <!-- Address/contact Cards -->
+        </div>
+        <br></br>
+
+        <!-- Add Address Book Modal -->
+        <div class="modal fade" id="addAddressModal" tabindex="-1" role="dialog" aria-labelledby="addAddressModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+
+                        <div class="addNewAddress" id="addNewAddress">
+
+                            <h5 class="text-center"> Add New Address/Contact </h5>
+
+                            <div id="addNewAddressInfoMessage" class="alert alert-dismissible fade show"> </div>
+
+                            <div class="form-group">
+                                <label for="addNewGroup">Group</label>
+                                <select id="addNewGroup" class="form-control">
+                                    <!-- Groups -->
+                                    <option value="new">Add New Group</option>
+                                </select>
+                                <input type="text" class="form-control mt-2 d-none" id="addNewGroupCreate"
+                                    placeholder="Enter new group name">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="addNewAddressFirstName"> First Name </label>
+                                <input type="text" class="form-control" id="addNewAddressFirstName">
+                            </div>
+                            <div class="form-group">
+                                <label for="addNewAddressLastName"> Last Name </label>
+                                <input type="text" class="form-control" id="addNewAddressLastName">
+                            </div>
+
+                            <!-- Company Information in Address Book -->
+                            <div class="form-group">
+                                <label for="addNewAddressCompanyInfo" class="w-100">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <span class="mb-0 mr-2">Company Details</span>
+                                        <button type="button" class="btn btn-sm btn-link p-0" id="toggleExtraFields"
+                                            title="Show more">
+                                            <span id="toggleIcon">▼</span>
+                                        </button>
+                                    </div>
+                                </label>
+                            </div>
+                            <!-- Hidden fields -->
+                            <div id="extraFields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="addNewAddressCompany"> Company </label>
+                                    <input type="text" class="form-control" id="addNewAddressCompany">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addNewAddressJobTitle"> Job Title </label>
+                                    <input type="text" class="form-control" id="addNewAddressJobTitle">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addNewAddressDepartment"> Department </label>
+                                    <input type="text" class="form-control" id="addNewAddressDepartment">
+                                </div>
+                            </div>
+
+
+                            <div class="form-group">
+                                <label for="addNewAddressDOB"> Date of Birth (DOB) </label>
+                                <input type="date" class="form-control" id="addNewAddressDOB">
+                            </div>
+
+
+                            <!-- Contact Information in Address Book -->
+                            <div class="form-group">
+                                <label for="addNewAddressContactInfo" class="w-100">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <span class="mb-0 mr-2">Contact Information</span>
+                                        <button type="button" class="btn btn-sm btn-link p-0"
+                                            id="toggleContactInfoExtraFields" title="Show more">
+                                            <span id="toggleContactInfoIcon">▼</span>
+                                        </button>
+                                    </div>
+                                </label>
+                            </div>
+                            <!-- Hidden fields -->
+                            <div id="ContactInfoExtraFields" style="display: none;">
+                                <div class="form-group">
+                                    <label for="addNewAddressEmail"> E-Mail </label>
+                                    <input type="text" class="form-control" id="addNewAddressEmail">
+                                </div>
+
+                                <div class="form-group d-flex justify-content-center align-items-center">
+                                    <button type="button" class="btn btn-outline-info btn-sm btn-block mb-3"
+                                        id="addEmailFieldBtn">Add E-Mail</button>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addNewAddressPhoneNumber"> Phone Number </label>
+                                    <input type="text" class="form-control" id="addNewAddressPhoneNumber">
+                                </div>
+
+                                <div class="form-group d-flex justify-content-center align-items-center">
+                                    <button type="button" class="btn btn-outline-info btn-sm btn-block mb-3"
+                                        id="addPhoneNumberFieldBtn"> Add Phone Number </button>
+                                </div>
+                            </div>
+
+                            <!-- Address Information in Address Book -->
+                            <div class="form-group">
+                                <label for="addNewAddressAddressInfo" class="w-100">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <span class="mb-0 mr-2">Address Information</span>
+                                        <button type="button" class="btn btn-sm btn-link p-0"
+                                            id="toggleAddressInfoExtraFields" title="Show more">
+                                            <span id="toggleAddressInfoIcon">▼</span>
+                                        </button>
+                                    </div>
+                                </label>
+                            </div>
+                            <!-- Hidden fields -->
+                            <div id="AddressInfoExtraFields" style="display: none;">
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <span class="mb-0 mr-2">Address #1</span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="addNewAddressAddressLine1"> Address Line 1 </label>
+                                    <input type="text" class="form-control" id="addNewAddressAddressLine1">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addNewAddressAddressLine2"> Address Line 2 </label>
+                                    <input type="text" class="form-control" id="addNewAddressAddressLine2">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addNewAddressAddressCity"> City </label>
+                                    <input type="text" class="form-control" id="addNewAddressAddressCity">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addNewAddressAddressState"> State </label>
+                                    <input type="text" class="form-control" id="addNewAddressAddressState">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="addNewAddressAddressZipCode"> ZipCode</label>
+                                    <input type="text" class="form-control" id="addNewAddressAddressZipCode">
+                                </div>
+
+                                <div class="form-group d-flex justify-content-center align-items-center">
+                                    <button type="button" class="btn btn-outline-info btn-sm btn-block mb-3"
+                                        id="addAddressFieldBtn"> Add Another Address </button>
+                                </div>
+                            </div>
+
+
+                            <!-- Show More Fields in Address Book -->
+                            <div class="form-group">
+                                <label for="addNewAddressShowMoreInfo" class="w-100">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <span class="mb-0 mr-2">Show More Options</span>
+                                        <button type="button" class="btn btn-sm btn-link p-0"
+                                            id="toggleShowMoreInfoExtraFields" title="Show more">
+                                            <span id="toggleShowMoreInfoIcon">▼</span>
+                                        </button>
+                                    </div>
+                                </label>
+                            </div>
+                            <!-- Hidden fields -->
+                            <div id="ShowMoreInfoExtraFields" style="display: none;">
+                                <div class="form-group d-flex justify-content-center align-items-center">
+                                    <button type="button" class="btn btn-outline-info btn-sm btn-block mb-3"> + Add
+                                        Significant Date
+                                    </button>
+                                </div>
+
+                                <div class="form-group d-flex justify-content-center align-items-center">
+                                    <button type="button" class="btn btn-outline-info btn-sm btn-block mb-3"> + Add
+                                        Website </button>
+                                </div>
+
+                                <div class="form-group d-flex justify-content-center align-items-center">
+                                    <button type="button" class="btn btn-outline-info btn-sm btn-block mb-3"> + Add
+                                        Custom Field </button>
+                                </div>
+                            </div>
+
+
+                            <div class="form-group">
+                                <label for="addNewAddressNotes">Notes</label>
+                                <textarea class="form-control" id="addNewAddressNotes" rows="4"></textarea>
+                            </div>
+                            <div class="color-picker">
+                                <div class="color-option selected" style="background-color: orange;"
+                                    data-color="orange">
+                                    <span class="checkmark">✔</span>
+                                </div>
+                                <div class="color-option" style="background-color: red;" data-color="red">
+                                    <span class="checkmark">✔</span>
+                                </div>
+                                <div class="color-option" style="background-color: yellow;" data-color="yellow">
+                                    <span class="checkmark">✔</span>
+                                </div>
+                                <div class="color-option" style="background-color: green;" data-color="green">
+                                    <span class="checkmark">✔</span>
+                                </div>
+                                <div class="color-option" style="background-color: blue;" data-color="blue">
+                                    <span class="checkmark">✔</span>
+                                </div>
+                                <div class="color-option" style="background-color: gray;" data-color="gray">
+                                    <span class="checkmark">✔</span>
+                                </div>
+                            </div>
+                            <br>
+                        </div>
+                        <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button id="addNewAddressBtn" class="btn btn-primary">Add Address</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">SecurePass © 2025</div>
+
+    <script src="darkmode.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
+    <script>
+        $('#toggleExtraFields').on('click', function () {
+            $('#extraFields').slideToggle();
+            let icon = $('#toggleIcon');
+            icon.text(icon.text() === '▼' ? '▲' : '▼');
+        });
+
+        $('#toggleContactInfoExtraFields').on('click', function () {
+            $('#ContactInfoExtraFields').slideToggle();
+            let icon = $('#toggleContactInfoIcon');
+            icon.text(icon.text() === '▼' ? '▲' : '▼');
+        });
+
+        $('#toggleAddressInfoExtraFields').on('click', function () {
+            $('#AddressInfoExtraFields').slideToggle();
+            let icon = $('#toggleAddressInfoIcon');
+            icon.text(icon.text() === '▼' ? '▲' : '▼');
+        });
+
+        $('#toggleShowMoreInfoExtraFields').on('click', function () {
+            $('#ShowMoreInfoExtraFields').slideToggle();
+            let icon = $('#toggleShowMoreInfoIcon');
+            icon.text(icon.text() === '▼' ? '▲' : '▼');
+        });
+
+        // Container for extra email fields
+        const emailContainer = $('<div id="extraEmailFieldsContainer"></div>');
+        $('#addEmailFieldBtn').closest('.form-group').before(emailContainer);
+
+        let emailFieldCounter = 1; // Start at 1 for E-Mail #1 (static field)
+
+        $('#addEmailFieldBtn').on('click', function () {
+            emailFieldCounter++;
+
+            const newField = $(`
+                <div class="form-group email-field" data-index="${emailFieldCounter}">
+                    <label for="addNewAddressEmail${emailFieldCounter}">E-Mail #${emailFieldCounter}</label>
+                    <div class="input-group">
+                        <input type="email" class="form-control" id="addNewAddressEmail${emailFieldCounter}" name="addNewAddressEmail${emailFieldCounter}" placeholder="E-Mail #${emailFieldCounter}">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary remove-email-btn" type="button">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `);
+
+            emailContainer.append(newField);
+            renumberEmailFields();
+        });
+
+        $(document).on('click', '.remove-email-btn', function () {
+            $(this).closest('.email-field').remove();
+            renumberEmailFields();
+        });
+
+        function renumberEmailFields() {
+            emailContainer.find('.email-field').each(function (index) {
+                const number = index + 2; // Starts from E-Mail #2 (since #1 is static)
+                const label = $(this).find('label');
+                const input = $(this).find('input');
+
+                label.text(`E-Mail #${number}`);
+                label.attr('for', `addNewAddressEmail${number}`);
+                input.attr('id', `addNewAddressEmail${number}`);
+                input.attr('name', `addNewAddressEmail${number}`);
+                input.attr('placeholder', `E-Mail #${number}`);
+            });
+        }
+
+        // Create container for phone number fields
+        const phoneContainer = $('<div id="extraPhoneFieldsContainer"></div>');
+        $('#addPhoneNumberFieldBtn').closest('.form-group').before(phoneContainer);
+
+        let phoneFieldCounter = 1; // Start at 1 for Phone Number #1 (static)
+
+        $('#addPhoneNumberFieldBtn').on('click', function () {
+            phoneFieldCounter++;
+
+            const newPhoneField = $(`
+            <div class="form-group phone-field" data-index="${phoneFieldCounter}">
+                <label for="addNewAddressPhoneNumber${phoneFieldCounter}">Phone Number #${phoneFieldCounter}</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="addNewAddressPhoneNumber${phoneFieldCounter}" name="addNewAddressPhoneNumber${phoneFieldCounter}" placeholder="Phone Number #${phoneFieldCounter}">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary remove-phone-btn" type="button">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `);
+
+            phoneContainer.append(newPhoneField);
+            renumberPhoneFields();
+        });
+
+        $(document).on('click', '.remove-phone-btn', function () {
+            $(this).closest('.phone-field').remove();
+            renumberPhoneFields();
+        });
+
+        function renumberPhoneFields() {
+            phoneContainer.find('.phone-field').each(function (index) {
+                const number = index + 2; // Starts from Phone Number #2
+                const label = $(this).find('label');
+                const input = $(this).find('input');
+
+                label.text(`Phone Number #${number}`);
+                label.attr('for', `addNewAddressPhoneNumber${number}`);
+                input.attr('id', `addNewAddressPhoneNumber${number}`);
+                input.attr('name', `addNewAddressPhoneNumber${number}`);
+                input.attr('placeholder', `Phone Number #${number}`);
+            });
+        }
+
+        // Container for dynamically added address fields
+        const addressInfoContainer = $('<div id="extraAddressInfoFieldsContainer"></div>');
+        $('#addAddressFieldBtn').closest('.form-group').before(addressInfoContainer);
+
+        let addressInfoFieldCounter = 1; // Address #1 is static
+
+        $('#addAddressFieldBtn').on('click', function () {
+            addressInfoFieldCounter++;
+
+            const addressBlock = $(`
+            <div class="address-info-block mb-4" data-index="${addressInfoFieldCounter}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">Address #${addressInfoFieldCounter}</h6>
+                    <button class="btn btn-sm btn-outline-danger remove-address-info-btn" type="button" title="Remove Address">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label for="addNewAddressAddressLine1_${addressInfoFieldCounter}">Address Line 1</label>
+                    <input type="text" class="form-control" id="addNewAddressAddressLine1_${addressInfoFieldCounter}" name="addNewAddressAddressLine1_${addressInfoFieldCounter}">
+                </div>
+
+                <div class="form-group">
+                    <label for="addNewAddressAddressLine2_${addressInfoFieldCounter}">Address Line 2</label>
+                    <input type="text" class="form-control" id="addNewAddressAddressLine2_${addressInfoFieldCounter}" name="addNewAddressAddressLine2_${addressInfoFieldCounter}">
+                </div>
+
+                <div class="form-group">
+                    <label for="addNewAddressAddressCity_${addressInfoFieldCounter}">City</label>
+                    <input type="text" class="form-control" id="addNewAddressAddressCity_${addressInfoFieldCounter}" name="addNewAddressAddressCity_${addressInfoFieldCounter}">
+                </div>
+
+                <div class="form-group">
+                    <label for="addNewAddressAddressState_${addressInfoFieldCounter}">State</label>
+                    <input type="text" class="form-control" id="addNewAddressAddressState_${addressInfoFieldCounter}" name="addNewAddressAddressState_${addressInfoFieldCounter}">
+                </div>
+
+                <div class="form-group">
+                    <label for="addNewAddressAddressZipCode_${addressInfoFieldCounter}">ZipCode</label>
+                    <input type="text" class="form-control" id="addNewAddressAddressZipCode_${addressInfoFieldCounter}" name="addNewAddressAddressZipCode_${addressInfoFieldCounter}">
+                </div>
+            </div>
+        `);
+
+            addressInfoContainer.append(addressBlock);
+            renumberAddressInfoBlocks();
+        });
+
+        // Remove address info block
+        $(document).on('click', '.remove-address-info-btn', function () {
+            $(this).closest('.address-info-block').remove();
+            renumberAddressInfoBlocks();
+        });
+
+        // Renumbering logic
+        function renumberAddressInfoBlocks() {
+            addressInfoContainer.find('.address-info-block').each(function (index) {
+                const number = index + 2; // Since Address #1 is static
+                $(this).attr('data-index', number);
+                $(this).find('h6').text(`Address #${number}`);
+
+                $(this).find('label[for^="addNewAddressAddressLine1_"]').attr('for', `addNewAddressAddressLine1_${number}`);
+                $(this).find('input[id^="addNewAddressAddressLine1_"]').attr('id', `addNewAddressAddressLine1_${number}`).attr('name', `addNewAddressAddressLine1_${number}`);
+
+                $(this).find('label[for^="addNewAddressAddressLine2_"]').attr('for', `addNewAddressAddressLine2_${number}`);
+                $(this).find('input[id^="addNewAddressAddressLine2_"]').attr('id', `addNewAddressAddressLine2_${number}`).attr('name', `addNewAddressAddressLine2_${number}`);
+
+                $(this).find('label[for^="addNewAddressAddressCity_"]').attr('for', `addNewAddressAddressCity_${number}`);
+                $(this).find('input[id^="addNewAddressAddressCity_"]').attr('id', `addNewAddressAddressCity_${number}`).attr('name', `addNewAddressAddressCity_${number}`);
+
+                $(this).find('label[for^="addNewAddressAddressState_"]').attr('for', `addNewAddressAddressState_${number}`);
+                $(this).find('input[id^="addNewAddressAddressState_"]').attr('id', `addNewAddressAddressState_${number}`).attr('name', `addNewAddressAddressState_${number}`);
+
+                $(this).find('label[for^="addNewAddressAddressZipCode_"]').attr('for', `addNewAddressAddressZipCode_${number}`);
+                $(this).find('input[id^="addNewAddressAddressZipCode_"]').attr('id', `addNewAddressAddressZipCode_${number}`).attr('name', `addNewAddressAddressZipCode_${number}`);
+            });
+        }
+    </script>
+
+</body>
+
+</html>
