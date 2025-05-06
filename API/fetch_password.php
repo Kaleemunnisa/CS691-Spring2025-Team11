@@ -13,7 +13,7 @@ if (isset($_SESSION['passed_user_email'])) {
     $loggedinusermailid = DecryptSessionsandCookies($_SESSION['passed_user_email']);
 
     // Fetch Accounts passwords from Vault
-    $sql = "SELECT * FROM vault WHERE UserEmailId = '$loggedinusermailid' AND DeleteFlag = 0 ORDER BY AppName ASC";
+    $sql = "SELECT * FROM vault WHERE UserEmailId = '$loggedinusermailid' AND DeleteFlag = 0  ORDER BY AppName ASC;";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {

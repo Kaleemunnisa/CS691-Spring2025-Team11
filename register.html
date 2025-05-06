@@ -55,6 +55,27 @@
     </style>
 </head>
 
+<script>
+    // === SESSION CHECK (redirect to login if not logged in) ===
+    $(document).ready(function () {
+        $.ajax({
+            url: "API/check_and_maintain_session_and_cookies.php",
+            method: "POST",
+            dataType: "json",
+            success: function (response) {
+                if (response.message === "logged_in") {
+                    window.location.href = "dashboard.html";
+                } else {
+                    initPage();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', xhr.responseText);
+            }
+        });
+    });
+</script>
+
 <body>
 
     <nav class="navbar navbar-light bg-light p-3">
@@ -91,123 +112,147 @@
     </div>
     <div class="footer">SecurePass © 2025</div>
 
+    <!-- Spinner Overlay -->
+    <div id="spinnerOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999; text-align:center;">
+        <div class="spinner-border text-primary" role="status" style="margin-top:20%;">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+
     <script src="darkmode.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.0.0-beta.1/jsencrypt.min.js"></script>
     <script>
-        // Toggle password visibility
-        $('#togglePassword').click(function () {
-            const passwordField = $('#password');
-            const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
-            passwordField.attr('type', type);
-            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
-        });
 
-        // send request to check sessions
         $(document).ready(function () {
-            $.ajax({
-                url: "API/check_and_maintain_session_and_cookies.php",
-                method: "POST",
-                dataType: "json",
-                success: function (response) {
-                    if (response.message === "logged_in") {
-                        window.location.href = "dashboard.html";
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error:', xhr.responseText);
-                }
+            // Show spinner on any AJAX start
+            $(document).ajaxStart(function () {
+                $('#spinnerOverlay').show();
             });
 
-            let publicKey = '';
+            // Hide spinner when all AJAX calls are done
+            $(document).ajaxStop(function () {
+                $('#spinnerOverlay').hide();
+            });
+        });
 
-            // Load Config File
-            function loadConfig() {
-                return fetch('config.env')
-                    .then(response => response.text())
-                    .then(text => {
-                        let lines = text.split('\n');
-                        for (let line of lines) {
-                            let [key, value] = line.split('=').map(s => s.trim());
-                            if (key === 'RSAPUBLICKEY') {
-                                let publicKey = value.replace(/['"]/g, ''); // Remove quotes if present
-                                return publicKey; // Return the key
+        // Load this script after session is authenticated
+        function initPage() {
+
+            // Toggle password visibility
+            $('#togglePassword').click(function () {
+                const passwordField = $('#password');
+                const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+                passwordField.attr('type', type);
+                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+            });
+
+            // send request to check sessions
+            $(document).ready(function () {
+                let publicKey = '';
+
+                // Load Config File
+                function loadConfig() {
+                    return fetch('config.env')
+                        .then(response => response.text())
+                        .then(text => {
+                            let lines = text.split('\n');
+                            for (let line of lines) {
+                                let [key, value] = line.split('=').map(s => s.trim());
+                                if (key === 'RSAPUBLICKEY') {
+                                    let publicKey = value.replace(/['"]/g, ''); // Remove quotes if present
+                                    return publicKey; // Return the key
+                                }
                             }
-                        }
-                        throw new Error("RSAPUBLICKEY not found in config.env");
-                    })
-                    .catch(error => console.error('Error loading config:', error));
-            }
+                            throw new Error("RSAPUBLICKEY not found in config.env");
+                        })
+                        .catch(error => console.error('Error loading config:', error));
+                }
 
-            // Now, use the returned value:
-            loadConfig().then(publicKey => {
-                console.log("RSAPUBLICKEY:", publicKey);
+                // Now, use the returned value:
+                loadConfig().then(publicKey => {
+                    console.log("RSAPUBLICKEY:", publicKey);
 
-                // Send details to API
-                $("#signUp").click(function () {
+                    // Send details to API
+                    $("#signUp").click(function () {
 
-                    const userpassword = $('#password').val();
+                        const userpassword = $('#password').val();
 
-                    // Encrypt email and password
-                    const encryptor = new JSEncrypt();
-                    encryptor.setPublicKey(publicKey);
-                    const encryptedUserpassword = encryptor.encrypt(userpassword);
+                        // Encrypt email and password
+                        const encryptor = new JSEncrypt();
+                        encryptor.setPublicKey(publicKey);
+                        const encryptedUserpassword = encryptor.encrypt(userpassword);
 
-                    var formData = {
-                        firstname: $("#firstname").val(),
-                        lastname: $("#lastname").val(),
-                        useremail: $("#useremail").val(),
-                        password: encryptedUserpassword
-                    };
+                        var formData = {
+                            firstname: $("#firstname").val(),
+                            lastname: $("#lastname").val(),
+                            useremail: $("#useremail").val(),
+                            password: encryptedUserpassword
+                        };
 
-                    $.ajax({
-                        type: "POST",
-                        url: "API/register.php",
-                        data: formData,
-                        dataType: "json",
-                        success: function (response) {
-                            if (response.message == "user already exists") {
-                                console.log('Error: User with email exists!');
-                                // Show error
-                                $('#registerPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error: User with email exists!').show();
+                        $.ajax({
+                            type: "POST",
+                            url: "API/register.php",
+                            data: formData,
+                            dataType: "json",
+                            success: function (response) {
+                                if (response.message == "user already exists") {
 
-                                setTimeout(function () {
-                                    $('#registerPageInfoMessage').hide();
-                                }, 2000);
+                                    // Log event to Database
+                                    $.ajax({
+                                        url: 'API/log_event.php',
+                                        type: 'POST',
+                                        data: {
+                                            action: 'USER_SIGNUP',
+                                            details: `New user signed up`
+                                        }
+                                    });
+
+                                    console.log('Error: User with email exists!');
+                                    // Show error
+                                    $('#registerPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error: User with email exists!').show();
+
+                                    setTimeout(function () {
+                                        $('#registerPageInfoMessage').hide();
+                                    }, 2000);
+                                }
+                                if (response.message == "user registration failed") {
+                                    console.log('Error: User registration failed');
+                                    // Show error
+                                    $('#registerPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error: user registration failed').show();
+
+                                    setTimeout(function () {
+                                        $('#registerPageInfoMessage').hide();
+                                    }, 2000);
+                                }
+                                if (response.message == "user registration sucessful") {
+                                    console.log('New Account created successfully.');
+                                    // Clear values in Registration Form
+                                    $('#firstname').val('');
+                                    $('#lastname').val('');
+                                    $('#useremail').val('');
+                                    $('#password').val('');
+
+                                    // Show success
+                                    $('#registerPageInfoMessage').removeClass('alert-danger').addClass('alert-success').html('New Account created successfully.').show();
+
+                                    setTimeout(function () {
+                                        $('#registerPageInfoMessage').hide();
+                                    }, 2000);
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.log("Error: Cannot create account");
                             }
-                            if (response.message == "user registration failed") {
-                                console.log('Error: User registration failed');
-                                // Show error
-                                $('#registerPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Error: user registration failed').show();
-
-                                setTimeout(function () {
-                                    $('#registerPageInfoMessage').hide();
-                                }, 2000);
-                            }
-                            if (response.message == "user registration sucessful") {
-                                console.log('New Account created successfully.');
-                                // Clear values in Registration Form
-                                $('#firstname').val('');
-                                $('#lastname').val('');
-                                $('#useremail').val('');
-                                $('#password').val('');
-
-                                // Show success
-                                $('#registerPageInfoMessage').removeClass('alert-danger').addClass('alert-success').html('New Account created successfully.').show();
-
-                                setTimeout(function () {
-                                    $('#registerPageInfoMessage').hide();
-                                }, 2000);
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            console.log("Error: Cannot create account");
-                        }
+                        });
                     });
+
                 });
 
             });
 
-        });
+        }
     </script>
 </body>
 

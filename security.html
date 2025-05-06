@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass - Security</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .card {
+            border-radius: 12px;
+            padding: 15px;
+            background: #ffffff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+        }
+
+        .card-header {
+            border-bottom: 1px solid #1e1e1e;
+        }
+
+        .sidebar {
+            width: 250px;
+            position: fixed;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.1);
+            padding-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .sidebar.collapsed {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .sidebar a {
+            padding: 10px;
+            text-decoration: none;
+            font-size: 18px;
+            color: black;
+            display: block;
+        }
+
+        .sidebar a:hover {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        .content {
+            margin-left: 260px;
+            padding: 20px;
+            transition: margin-left 0.3s;
+        }
+
+        .content.expanded {
+            margin-left: 0;
+        }
+
+        .btn-primary {
+            background-color: #e67e22;
+            border: none;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode .card {
+            background: #1e1e1e;
+            color: white;
+        }
+
+        .dark-mode .card-header {
+            border-bottom: 1px solid white;
+        }
+
+        .dark-mode .sidebar {
+            background: #1e1e1e;
+        }
+
+        .dark-mode .sidebar a {
+            color: rgb(255, 253, 253);
+        }
+
+        .dark-mode .sidebar a:hover {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        .dark-mode .list-group-item {
+            background-color: #232323;
+            color: #fff;
+            border-color: #232323;
+        }
+
+        .dark-mode .badge-success {
+            background-color: #27ae60 !important;
+            color: #fff !important;
+        }
+
+        .dark-mode .btn-secondary {
+            background-color: #323232;
+            color: #fff;
+            border: none;
+        }
+
+        .dark-mode .btn-secondary:hover,
+        .dark-mode .btn-secondary:focus {
+            background-color: #444444;
+        }
+
+        .dark-mode .btn-warning {
+            background-color: #e67e22;
+            color: #fff;
+            border: none;
+        }
+
+        .dark-mode .btn-warning:hover {
+            background-color: #cf711f;
+        }
+
+        .dark-mode #spinnerOverlay {
+            background: rgba(18, 18, 18, 0.7);
+        }
+
+        /* Responsive cards for Active Sessions */
+        #sessionCards .session-card {
+            border: 1px solid #dedede;
+            border-radius: 10px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            background: #fff;
+        }
+
+        .dark-mode #sessionCards .session-card {
+            background: #232323;
+            border-color: #333;
+        }
+
+        .session-card .session-device {
+            font-weight: bold;
+        }
+
+        .session-card .session-details {
+            font-size: 0.98rem;
+            color: #888;
+        }
+
+        .dark-mode .session-details {
+            color: #bcbcbc;
+        }
+
+        @media (max-width: 768px) {
+
+            .session-card,
+            .list-group-item {
+                padding: 1.25rem !important;
+            }
+
+            .btn {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .session-card .d-flex {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+
+            .session-card .session-actions {
+                margin-top: 1rem;
+                width: 100%;
+            }
+        }
+
+        /* Trusted Devices improvements */
+        .trusted-device-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 769px) {
+            .trusted-device-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .trusted-device-info {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<script>
+    // send request to check sessions
+    $(document).ready(function () {
+        $.ajax({
+            url: "API/check_and_maintain_session_and_cookies.php",
+            method: "POST",
+            dataType: "json",
+            success: function (response) {
+                if (response.message === "not_logged_in") {
+                    window.location.href = "login.html";
+                }
+                else {
+                    // Fetch and populate security info
+                    loadSecurityInfo();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', xhr.responseText);
+            }
+        });
+    });
+</script>
+
+<body>
+    <nav class="navbar navbar-light bg-light p-3">
+        <a class="navbar-brand font-weight-bold" href="dashboard.html">🔒 SecurePass</a>
+        <button id="darkModeToggle" class="toggle-btn">
+            <i class="fas fa-moon"></i>
+        </button>
+    </nav>
+
+    <div class="container mt-5">
+        <h3 class="mb-4"><label>Security Settings</label></h3>
+
+        <!-- Change Master Password -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Change Master Password</span>
+                <div>
+                    <span id="lastChangedLabel" class="mr-3 text-muted" style="font-size: 0.95em;">Last changed: <span
+                            id="lastChangedDate">2025-04-10 16:34</span></span>
+                    <button id="showChangePasswordBtn" class="btn btn-sm btn-primary">Change Master Password</button>
+                </div>
+            </div>
+            <div class="card-body" id="changePasswordSection" style="display: none;">
+                <div id="changePasswordMsg"></div> <!-- Info message shown here -->
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                    <button type="button" class="btn btn-secondary" id="cancelChangePassword">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Two-Factor Authentication -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Two-Factor Authentication (2FA)
+            </div>
+            <div class="card-body">
+                <p>Status: <span class="badge badge-success" id="twofaStatusBadge">Enabled</span></p>
+                <button class="btn btn-warning" id="disable2faBtn">Disable 2FA</button>
+                <button class="btn btn-success" id="enable2faBtn">Enable 2FA</button>
+            </div>
+        </div>
+
+        <!-- Notification Preferences -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Notification Preferences
+            </div>
+            <div class="card-body">
+                <form id="notificationPrefsForm" class="d-flex flex-column">
+                    <div class="custom-control custom-switch mb-2">
+                        <input type="checkbox" class="custom-control-input" id="notifAccountInfoUpdate">
+                        <label class="custom-control-label" for="notifAccountInfoUpdate">Account Info Update</label>
+                    </div>
+                    <div class="custom-control custom-switch mb-2">
+                        <input type="checkbox" class="custom-control-input" id="notifAccountLogin">
+                        <label class="custom-control-label" for="notifAccountLogin">Account Login</label>
+                    </div>
+                    <div class="custom-control custom-switch mb-2">
+                        <input type="checkbox" class="custom-control-input" id="notifNewAccountAdded">
+                        <label class="custom-control-label" for="notifNewAccountAdded">New Account Added</label>
+                    </div>
+                    <div class="custom-control custom-switch mb-2">
+                        <input type="checkbox" class="custom-control-input" id="notifSharedWithOthers">
+                        <label class="custom-control-label" for="notifSharedWithOthers">Shared With Others</label>
+                    </div>
+                    <div class="custom-control custom-switch mb-2">
+                        <input type="checkbox" class="custom-control-input" id="notifSharedWithYou">
+                        <label class="custom-control-label" for="notifSharedWithYou">Shared With You</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3" id="saveNotifPrefsBtn">Save Preferences</button>
+                    <span id="notifPrefsMsg" class="mt-2"></span>
+                </form>
+            </div>
+        </div>
+
+        <!-- Trusted Devices -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Trusted Devices
+            </div>
+            <div class="card-body">
+                <div id="trustedDeviceCards">
+                    <!-- Trusted devices are loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Session Management -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Active Sessions
+            </div>
+            <div class="card-body">
+                <div id="sessionCards"></div>
+            </div>
+        </div>
+
+        <!-- Login Activity -->
+        <div class="card mb-4">
+            <div class="card-header">
+                Recent Login Activity
+            </div>
+            <div class="card-body">
+                <ul class="list-group" id="loginActivityList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="footer">SecurePass © 2025</div>
+
+    <!-- Spinner Overlay -->
+    <div id="spinnerOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999; text-align:center;">
+        <div class="spinner-border text-primary" role="status" style="margin-top:20%;">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+    <script src="darkmode.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Show spinner on any AJAX start
+            $(document).ajaxStart(function () {
+                $('#spinnerOverlay').show();
+            });
+            $(document).ajaxStop(function () {
+                $('#spinnerOverlay').hide();
+            });
+        });
+
+        $("#toggleSidebar").click(function () {
+            $("#sidebar").toggleClass("collapsed");
+            $("#content").toggleClass("expanded");
+        });
+
+        function loadSecurityInfo() {
+            $.ajax({
+                url: "API/get_security_info.php",
+                method: "GET",
+                dataType: "json",
+                success: function (data) {
+                    // Update last changed date
+                    $("#lastChangedDate").text(data.last_master_password_changed);
+
+                    // Update 2FA status
+                    update2faUI(data.two_factor_status === "enabled");
+
+                    // Populate notification preferences
+                    if (data.notification_prefs) {
+                        $('#notifAccountInfoUpdate').prop('checked', (data.notification_prefs.AccountInfoUpdate == "1"));
+                        $('#notifAccountLogin').prop('checked', (data.notification_prefs.AccountLogin == "1"));
+                        $('#notifNewAccountAdded').prop('checked', (data.notification_prefs.NewAccountAdded == "1"));
+                        $('#notifSharedWithOthers').prop('checked', (data.notification_prefs.SharedWithOthers == "1"));
+                        $('#notifSharedWithYou').prop('checked', (data.notification_prefs.SharedWithYou == "1"));
+                    }
+
+                    // Active Sessions
+                    let $sessionCards = $("#sessionCards");
+                    $sessionCards.empty();
+                    const mySessionToken = getCookie('user_session_token');
+                    data.sessions.forEach(function (sess) {
+                        let isCurrent = (mySessionToken === sess.session_token);
+                        $sessionCards.append(`
+                            <div class="session-card mb-3">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                    <div>
+                                        <span class="session-device">${sess.device}</span>
+                                        ${isCurrent ? '<span class="badge badge-info ml-2">Current Device</span>' : ''}
+                                        <div class="session-details">IP: ${sess.ip}</div>
+                                        <div class="session-details">Last Active: ${sess.last_active}</div>
+                                    </div>
+                                    <div class="session-actions mt-2 mt-md-0">
+                                        <button class="btn btn-sm btn-danger logout-session-btn"
+                                            data-session-token="${sess.session_token}"
+                                            ${isCurrent ? 'disabled title="Current Session"' : ''}>
+                                            Logout
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    });
+
+                    // Trusted Devices
+                    let $trustedDeviceCards = $("#trustedDeviceCards");
+                    $trustedDeviceCards.empty();
+                    const myDeviceToken = getCookie('trusted_device');
+                    data.trusted_devices.forEach(function (dev) {
+                        let isCurrent = (dev.device_token === myDeviceToken);
+                        $trustedDeviceCards.append(`
+                            <div class="session-card trusted-device-card mb-3">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                    <div>
+                                        <span class="session-device">${dev.device}</span>
+                                        ${isCurrent ? '<span class="badge badge-info ml-2">Current Device</span>' : ''}
+                                        <div class="session-details">IP: ${dev.ip}</div>
+                                        <div class="session-details">Trusted At: ${dev.trusted_at || ''}</div>
+                                    </div>
+                                    <div class="session-actions mt-2 mt-md-0">
+                                        <button class="btn btn-sm btn-danger remove-trusted-device-btn"
+                                            data-device-token="${dev.device_token}"
+                                            ${isCurrent ? 'disabled title="Current Device"' : ''}>
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    });
+
+                    // Login activity
+                    let $loginList = $("#loginActivityList");
+                    $loginList.empty();
+                    data.login_activity.forEach(function (log) {
+                        $loginList.append(`<li class="list-group-item">Login from ${log.ip} at ${log.timestamp}</li>`);
+                    });
+                },
+                error: function (xhr) {
+                    console.error('Failed to load security info', xhr);
+                }
+            });
+        }
+
+        // Change master password logic
+        $(document).ready(function () {
+            $('#showChangePasswordBtn').click(function () {
+                $('#changePasswordSection').slideDown(200);
+                $(this).hide();
+            });
+            $('#cancelChangePassword').click(function () {
+                $('#changePasswordSection').slideUp(200, function () {
+                    $('#showChangePasswordBtn').show();
+                });
+            });
+        });
+
+        $('#changePasswordForm').submit(function (e) {
+            e.preventDefault();
+            $('#changePasswordMsg').html('');
+            $.post('API/update_security_settings.php', {
+                action: "change_password",
+                current_password: $('#currentPassword').val(),
+                new_password: $('#newPassword').val()
+            }, function (res) {
+                if (res.success) {
+                    $('#changePasswordMsg').html(`
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            Master password updated successfully!
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    `);
+                    $('#changePasswordForm')[0].reset();
+                    let now = new Date();
+                    let formatted = now.getFullYear() + '-' +
+                        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(now.getDate()).padStart(2, '0') + ' ' +
+                        String(now.getHours()).padStart(2, '0') + ':' +
+                        String(now.getMinutes()).padStart(2, '0');
+                    $('#lastChangedDate').text(formatted);
+                    setTimeout(function () {
+                        $('#changePasswordMsg .alert').alert('close');
+                        $('#changePasswordSection').slideUp(200, function () {
+                            $('#showChangePasswordBtn').show();
+                        });
+                    }, 3000);
+                } else {
+                    $('#changePasswordMsg').html('<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                        res.message +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span></button></div>');
+                }
+            }, 'json');
+        });
+
+        $('#enable2faBtn').click(function () {
+            $.post('API/update_security_settings.php', { action: "enable_2fa" }, function (res) {
+                if (res.success) {
+                    reload2faStatus();
+                } else {
+                    alert('Failed to enable 2FA');
+                }
+            }, 'json');
+        });
+
+        $('#disable2faBtn').click(function () {
+            $.post('API/update_security_settings.php', { action: "disable_2fa" }, function (res) {
+                if (res.success) {
+                    reload2faStatus();
+                } else {
+                    alert('Failed to disable 2FA');
+                }
+            }, 'json');
+        });
+
+        function update2faUI(enabled) {
+            let $badge = $('#twofaStatusBadge');
+            if (enabled) {
+                $badge.removeClass('badge-danger').addClass('badge-success').text('Enabled');
+                $('#enable2faBtn').hide();
+                $('#disable2faBtn').show();
+            } else {
+                $badge.removeClass('badge-success').addClass('badge-danger').text('Disabled');
+                $('#disable2faBtn').hide();
+                $('#enable2faBtn').show();
+            }
+        }
+        function reload2faStatus() {
+            $.get("API/get_security_info.php", function (data) {
+                if (data.two_factor_status) {
+                    update2faUI(data.two_factor_status === "enabled");
+                }
+            }, 'json');
+        }
+
+        function getCookie(name) {
+            let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : null;
+        }
+
+        // Delegate handler for dynamically created buttons
+        $(document).on('click', '.logout-session-btn', function () {
+            const sessionToken = $(this).data('session-token');
+            if (confirm("Are you sure you want to log out this session?")) {
+                $.post('API/update_security_settings.php', {
+                    action: 'logout_session',
+                    session_token: sessionToken
+                }, function (res) {
+                    if (res.success) {
+                        // Reload sessions to keep UI synced
+                        loadSecurityInfo();
+                    } else {
+                        alert('Failed to log out session: ' + res.message);
+                    }
+                }, 'json');
+            }
+        });
+
+        $('#notificationPrefsForm').submit(function (e) {
+            e.preventDefault();
+            $('#saveNotifPrefsBtn').prop('disabled', true);
+            $('#notifPrefsMsg').text('');
+            const prefs = {
+                action: 'update_notification_prefs',
+                AccountInfoUpdate: $('#notifAccountInfoUpdate').is(':checked') ? 1 : 0,
+                AccountLogin: $('#notifAccountLogin').is(':checked') ? 1 : 0,
+                NewAccountAdded: $('#notifNewAccountAdded').is(':checked') ? 1 : 0,
+                SharedWithOthers: $('#notifSharedWithOthers').is(':checked') ? 1 : 0,
+                SharedWithYou: $('#notifSharedWithYou').is(':checked') ? 1 : 0,
+            };
+            $.post('API/update_security_settings.php', prefs, function (res) {
+                if (res.success) {
+                    $('#notifPrefsMsg').html('<span class="text-success">Preferences saved!</span>');
+                } else {
+                    $('#notifPrefsMsg').html('<span class="text-danger">Failed to save. Try again.</span>');
+                }
+                $('#saveNotifPrefsBtn').prop('disabled', false);
+            }, 'json');
+        });
+
+        $(document).on('click', '.remove-trusted-device-btn', function () {
+            const deviceToken = $(this).data('device-token');
+            if (confirm("Remove this trusted device?")) {
+                $.post('API/update_security_settings.php', {
+                    action: 'remove_trusted_device',
+                    device_token: deviceToken
+                }, function (res) {
+                    if (res.success) {
+                        // Reload trusted devices to keep UI synced
+                        loadSecurityInfo();
+                    } else {
+                        alert('Failed to remove trusted device: ' + res.message);
+                    }
+                }, 'json');
+            }
+        });
+
+    </script>
+</body>
+
+</html>

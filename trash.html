@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass - Trash</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .trash-card {
+            background: #ffffff;
+            border-left: 5px solid #dc3545;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+        }
+
+        .modal-Text {
+            color: rgb(0, 0, 0);
+        }
+
+        .close {
+            color: rgb(0, 0, 0);
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode .card {
+            background: #1e1e1e;
+            color: white;
+        }
+
+        .dark-mode .modal-content {
+            background-color: #1e1e1e;
+        }
+
+        .dark-mode .modal-Text {
+            color: rgb(255, 255, 255);
+        }
+
+        .dark-mode .close {
+            color: rgb(255, 255, 255);
+        }
+
+        .dark-mode .trash-card {
+            background: #1e1e1e;
+            border-left-color: #ff6b6b;
+            color: #ffffff;
+        }
+
+        .dark-mode .footer,
+        .dark-mode .tab-btns .btn {
+            background-color: #333 !important;
+            color: #fff !important;
+            border-color: #555;
+        }
+
+        .tab-btns .btn {
+            margin-right: 10px;
+        }
+
+        .tab-btns .btn-primary {
+            background-color: #e67e22;
+            border: none;
+        }
+
+        .footer {
+            background-color: #f4e1c6;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .dark-mode .footer {
+            background-color: #333;
+        }
+
+        .dark-mode .tab-btns .btn-primary {
+            background-color: #ff851b !important;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<script>
+    // === SESSION CHECK (redirect to login if not logged in) ===
+    $(document).ready(function () {
+        $.ajax({
+            url: "API/check_and_maintain_session_and_cookies.php",
+            method: "POST",
+            dataType: "json",
+            success: function (response) {
+                if (response.message === "not_logged_in") {
+                    window.location.href = "login.html";
+                } else {
+                    initPage();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', xhr.responseText);
+            }
+        });
+    });
+</script>
+
+<body>
+    <nav class="navbar navbar-light bg-light p-3">
+        <a class="navbar-brand font-weight-bold ml-2" href="dashboard.html">🔒 SecurePass</a>
+        <button id="darkModeToggle" class="btn btn-sm btn-outline-dark"><i class="fas fa-moon"></i></button>
+    </nav>
+
+    <br>
+    <h5 class="mx-auto font-weight-bold" style="text-align:center;">Recently Deleted Items</h5>
+
+    <div class="container mt-4">
+        <!-- Filter Buttons -->
+        <div class="tab-btns mb-4">
+            <button class="btn btn-primary" onclick="filterItems('password')">Passwords</button>
+            <button class="btn btn-secondary" onclick="filterItems('note')">Notes</button>
+            <button class="btn btn-secondary" onclick="filterItems('contact')">Contacts</button>
+            <button class="btn btn-secondary" onclick="filterItems('card')">Cards</button>
+        </div>
+
+        <div id="itemsContainer"></div>
+    </div>
+    <br></br>
+
+    <!-- Password Modal (View-Only) -->
+    <div class="modal fade" id="passwordModal" tabindex="-1" role="dialog" aria-labelledby="passwordModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h5 class="text-center">View Password</h5>
+
+                    <div class="form-group">
+                        <label>Group</label>
+                        <input type="text" class="form-control" id="viewAccountPasswordGroupValue" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Account Name</label>
+                        <input type="text" class="form-control" id="viewAccountPasswordAccountName" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" class="form-control" id="viewAccountPasswordUsername" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="viewAccountPasswordPassword" disabled>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePasswordForView"><i
+                                        class="fas fa-eye"></i></button>
+                                <button class="btn btn-outline-secondary" type="button" id="copyPassword"><i
+                                        class="far fa-clone"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>URL</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="viewAccountPasswordUrl" disabled>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="launchUrl"><i
+                                        class="fas fa-share"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea class="form-control" id="viewAccountPasswordNotes" disabled></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Modal (View-Only) -->
+    <div class="modal fade" id="notesModal" tabindex="-1" role="dialog" aria-labelledby="notesModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h5 class="text-center">View Note</h5>
+
+                    <div class="form-group">
+                        <label>Group</label>
+                        <input type="text" class="form-control" id="viewNotesGroupValue" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Note Title</label>
+                        <input type="text" class="form-control" id="viewNotesTitle" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea class="form-control" id="viewNotes" rows="9" disabled></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Modal (View-Only) -->
+    <div class="modal fade" id="viewEditAddressModal" tabindex="-1" role="dialog"
+        aria-labelledby="viewEditAddressModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h5 class="text-center">View Contact</h5>
+
+                    <div class="form-group">
+                        <label>Group</label>
+                        <input type="text" class="form-control" id="editGroup" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" class="form-control" id="editFirstName" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" class="form-control" id="editLastName" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea class="form-control" id="editNotes" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Modal (View-Only) -->
+    <div class="modal fade" id="viewEditCardModal" tabindex="-1" role="dialog" aria-labelledby="viewEditCardModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h5 class="text-center">View Card</h5>
+
+                    <div class="form-group">
+                        <label>Card Number</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="editCardNumber" readonly>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="copyCardNumberBtn"><i
+                                        class="fa fa-copy"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Card Holder Name</label>
+                        <input type="text" class="form-control" id="editCardHolderName" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>CVV</label>
+                        <input type="text" class="form-control" id="editCardCVV" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <div class="form-row">
+                            <div class="col"><input type="text" class="form-control" id="editCardExpiryMonth"
+                                    placeholder="MM" readonly></div>
+                            <div class="col"><input type="text" class="form-control" id="editCardExpiryYear"
+                                    placeholder="YYYY" readonly></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea class="form-control" id="editCardNotes" rows="2" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div class="footer">SecurePass © 2025</div>
+
+    <!-- Spinner Overlay -->
+    <div id="spinnerOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999; text-align:center;">
+        <div class="spinner-border text-primary" role="status" style="margin-top:20%;">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+
+    <script src="darkmode.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
+    <script>
+        // === GLOBAL SPINNER ON AJAX ===
+        $(document).ready(function () {
+            $(document).ajaxStart(function () {
+                $('#spinnerOverlay').show();
+            });
+            $(document).ajaxStop(function () {
+                $('#spinnerOverlay').hide();
+            });
+        });
+
+        // === SIDEBAR TOGGLE ===
+        $("#toggleSidebar").click(function () {
+            $("#sidebar").toggleClass("collapsed");
+            $("#content").toggleClass("expanded");
+        });
+
+        // Load this script after session is authenticated
+        function initPage() {
+
+            $(document).ready(function () {
+                fetchDeletedItems();
+                // Default filter to 'password'
+                document.querySelector(".tab-btns .btn-primary").click();
+            });
+
+            function fetchDeletedItems() {
+                $.ajax({
+                    url: "API/get_deleted_items.php",
+                    method: "POST",
+                    data: { action: 'fetch' },
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.success) {
+                            renderItems(response.data);
+                        } else {
+                            $('#itemsContainer').html('<div class="text-danger">No deleted items found.</div>');
+                        }
+                    },
+                    error: function () {
+                        $('#itemsContainer').html('<div class="text-danger">Error fetching deleted items.</div>');
+                    }
+                });
+            }
+
+            // Password view toggle
+            $(document).on("click", "#togglePasswordForView", function () {
+                const input = $("#viewAccountPasswordPassword");
+                const icon = $(this).find("i");
+
+                if (input.attr("type") === "password") {
+                    input.attr("type", "text");
+                    icon.removeClass("fa-eye").addClass("fa-eye-slash");
+                } else {
+                    input.attr("type", "password");
+                    icon.removeClass("fa-eye-slash").addClass("fa-eye");
+                }
+            });
+
+            // Copy password to clipboard
+            $("#copyPassword").click(function () {
+                let passwordField = $("#viewAccountPasswordPassword");
+                let password = passwordField.val();
+                var button = document.getElementById('copyPassword');
+
+                if (password) {
+                    navigator.clipboard.writeText(password).then(() => {
+                        // Initialize the popover
+                        var popover = new bootstrap.Popover(button, {
+                            trigger: 'manual',
+                            placement: 'bottom',
+                            content: 'Password copied to clipboard!',
+                        });
+
+                        popover.show();
+
+                        setTimeout(function () {
+                            popover.hide();
+                            popover.dispose();
+                        }, 2000);
+
+                        console.log("Password copied to clipboard!");
+                    }).catch(err => {
+                        console.error("Error copying text: ", err);
+                    });
+                }
+            });
+
+            function viewItem(account_id, vault_type) {
+                $.post("API/fetch_deleted_item_view_data.php", {
+                    id: account_id,
+                    vault_type: vault_type
+                }, function (response) {
+                    if (response.success) {
+                        populateModalFields(response.data, vault_type);
+                        const modalMap = {
+                            password: '#passwordModal',
+                            note: '#notesModal',
+                            contact: '#viewEditAddressModal',
+                            card: '#viewEditCardModal'
+                        };
+                        $(modalMap[vault_type]).modal('show');
+                    } else {
+                        alert("Unable to load item.");
+                    }
+                }, 'json');
+            }
+
+            function populateModalFields(data, type) {
+                if (type === 'password') {
+                    $('#viewAccountPasswordGroupValue').val(data.GroupName);
+                    $('#viewAccountPasswordAccountName').val(data.AppName);
+                    $('#viewAccountPasswordUsername').val(data.UserName);
+                    $('#viewAccountPasswordPassword').val(data.Password);
+                    $('#viewAccountPasswordUrl').val(data.Url);
+                    $('#viewAccountPasswordNotes').val(data.Notes);
+                }
+                else if (type === 'note') {
+                    $('#viewNotesGroupValue').val(data.GroupName);
+                    $('#viewNotesTitle').val(data.Title);
+                    $('#viewNotes').val(data.Notes);
+                }
+                else if (type === 'contact') {
+                    $('#editGroup').val(data.GroupName);
+                    $('#editFirstName').val(data.FirstName);
+                    $('#editLastName').val(data.LastName);
+                    $('#editNotes').val(data.Notes);
+                }
+                else if (type === 'card') {
+                    $('#editCardNumber').val(data.Fields?.CardNumber || '');
+                    $('#editCardHolderName').val(data.Fields?.CardHolderName || '');
+                    $('#editCardCVV').val(data.Fields?.CVV || '');
+                    $('#editCardExpiryMonth').val(data.Fields?.ExpiryMonth || '');
+                    $('#editCardExpiryYear').val(data.Fields?.ExpiryYear || '');
+                    $('#editCardNotes').val(data.Notes);
+                }
+            }
+
+            function renderItems(items) {
+                let html = '';
+                if (items.length === 0) {
+                    html = '<div class="text-muted">Trash is empty.</div>';
+                } else {
+                    items.forEach(item => {
+                        const iconType = {
+                            password: 'fa-key',
+                            note: 'fa-sticky-note',
+                            contact: 'fa-address-book',
+                            card: 'fa-credit-card'
+                        }[item.vault_type] || 'fa-trash';
+
+                        html += `
+                        <div class="trash-card" data-type="${item.vault_type}">
+                            <strong><i class="fas ${iconType}"></i> ${capitalize(item.vault_type)}:</strong> ${item.account_name}<br>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-info" onclick="viewItem('${item.account_id}', '${item.vault_type}')">View</button>
+                                <button class="btn btn-sm btn-success" onclick="restoreItem('${item.account_id}', '${item.vault_type}')">Restore</button>
+                                <button class="btn btn-sm btn-outline-danger ml-2" onclick="deletePermanently('${item.account_id}', '${item.vault_type}')">Delete Permanently</button>
+                            </div>
+                        </div>`;
+                    });
+                }
+                $('#itemsContainer').html(html);
+
+                // Trigger default filter
+                const defaultBtn = document.querySelector(".tab-btns .btn-primary");
+                if (defaultBtn) {
+                    defaultBtn.click();
+                }
+            }
+
+            function filterItems(type) {
+                document.querySelectorAll('.tab-btns .btn').forEach(btn => {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-secondary');
+                });
+                event.target.classList.remove('btn-secondary');
+                event.target.classList.add('btn-primary');
+
+                const cards = document.querySelectorAll('.trash-card');
+                cards.forEach(card => {
+                    card.style.display = (card.dataset.type === type) ? 'block' : 'none';
+                });
+            }
+
+            function restoreItem(account_id, vault_type) {
+                $.post("API/get_deleted_items.php", {
+                    action: 'restore',
+                    account_id,
+                    vault_type
+                }, function (res) {
+                    if (res.success) {
+                        fetchDeletedItems();
+                    } else {
+                        alert("Restore failed.");
+                    }
+                }, 'json');
+            }
+
+            function deletePermanently(account_id, vault_type) {
+                if (!confirm("Permanently delete this item? This cannot be undone.")) return;
+                $.post("API/get_deleted_items.php", {
+                    action: 'delete',
+                    account_id,
+                    vault_type
+                }, function (res) {
+                    if (res.success) {
+                        fetchDeletedItems();
+                    } else {
+                        alert("Permanent deletion failed.");
+                    }
+                }, 'json');
+            }
+
+            function capitalize(str) {
+                return str.charAt(0).toUpperCase() + str.slice(1);
+            }
+
+        }
+    </script>
+</body>
+
+</html>

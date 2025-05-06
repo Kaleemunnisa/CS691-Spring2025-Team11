@@ -131,9 +131,7 @@
         <a class="navbar-brand font-weight-bold" href="dashboard.html">🔒 SecurePass</a>
         <input type="text" id="searchInput" class="form-control w-25" placeholder="Search Notes..."
             onkeyup="searchNotes()">
-        <button id="darkModeToggle" class="toggle-btn">
-            <i class="fas fa-moon"></i>
-        </button>
+        <button id="darkModeToggle" class="btn btn-sm btn-outline-dark"><i class="fas fa-moon"></i></button>
     </nav>
 
     <div class="container mt-4">
@@ -152,6 +150,7 @@
         <div class="notes" id="notes">
             <!-- Password Cards -->
         </div>
+        <br></br>
 
     </div>
 
@@ -266,6 +265,7 @@
                         <div class="form-group">
                             <label for="addNewGroup">Group</label>
                             <select id="addNewGroup" class="form-control">
+                                <option selected="" disabled="">--- Select Group ---</option>
                                 <!-- Groups -->
                                 <option value="new">Add New Group</option>
                             </select>
@@ -309,8 +309,29 @@
         </div>
     </div>
 
+    <!-- Spinner Overlay -->
+    <div id="spinnerOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999; text-align:center;">
+        <div class="spinner-border text-primary" role="status" style="margin-top:20%;">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+
     <script src="darkmode.js"></script>
     <script>
+
+        $(document).ready(function () {
+            // Show spinner on any AJAX start
+            $(document).ajaxStart(function () {
+                $('#spinnerOverlay').show();
+            });
+
+            // Hide spinner when all AJAX calls are done
+            $(document).ajaxStop(function () {
+                $('#spinnerOverlay').hide();
+            });
+        });
 
         // color selector
         var selectedColor = "orange"; // Default selected color

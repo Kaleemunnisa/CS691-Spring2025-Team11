@@ -19,6 +19,11 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
     $email = decryptRSA($encryptedEmail);
     $password = decryptRSA($encryptedPassword);
 
+    // Device and IP info
+    $userEmail = $email;
+    $device = isset($_POST['device_info']) ? $_POST['device_info'] : $_SERVER['HTTP_USER_AGENT'];
+    $ip = isset($_POST['public_ip']) ? $_POST['public_ip'] : $_SERVER['REMOTE_ADDR'];
+
     // Prepare SQL statement to fetch user details based on email
     $stmt = $conn->prepare("SELECT * FROM login WHERE EmailId = ?");
     $stmt->bind_param("s", $email);
@@ -105,6 +110,24 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
                                 if ($sentRequestResult == 'Success'){
                                     $_SESSION['passed_user_email'] = EncryptSessionsandCookies($email);
 
+                                    $login_success = 1;
+
+                                    // Device and IP info
+                                    $success = $login_success ? 1 : 0;
+
+                                    // Log login attempt
+                                    $stmt = $conn->prepare("INSERT INTO login_activity (UserEmail, IPAddress, DeviceName, Success) VALUES (?, ?, ?, ?)");
+                                    $stmt->bind_param("sssi", $userEmail, $ip, $device, $success);
+                                    $stmt->execute();
+
+                                    $sessionToken = generateSessionToken();
+                                    setcookie("user_session_token", $sessionToken, time() + (86400 * 7), "/"); // 7 days
+                                    $_SESSION['user_session_token'] = $sessionToken;
+                                    
+                                    $stmt = $conn->prepare("INSERT INTO sessions (UserEmail, SessionID, DeviceName, IPAddress, CreatedAt, LastActive, IsActive) VALUES (?, ?, ?, ?, NOW(), NOW(), 1)");
+                                    $stmt->bind_param("ssss", $userEmail, $sessionToken, $device, $ip);
+                                    $stmt->execute();
+
                                     $cookie_name = "user_login";
                                     $cookie_value = $_SESSION['passed_user_email'];
                                     setcookie($cookie_name, $cookie_value, time() + (86400 * 7), "/"); // 86400 = 1 day  
@@ -114,6 +137,24 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
                             } else{            
                                 // IF notifications for login alert is disabled
                                 $_SESSION['passed_user_email'] = EncryptSessionsandCookies($email);
+                                
+                                $login_success = 1;
+
+                                // Device and IP info
+                                $success = $login_success ? 1 : 0;
+
+                                // Log login attempt
+                                $stmt = $conn->prepare("INSERT INTO login_activity (UserEmail, IPAddress, DeviceName, Success) VALUES (?, ?, ?, ?)");
+                                $stmt->bind_param("sssi", $userEmail, $ip, $device, $success);
+                                $stmt->execute();
+
+                                $sessionToken = generateSessionToken();
+                                setcookie("user_session_token", $sessionToken, time() + (86400 * 7), "/"); // 7 days
+                                $_SESSION['user_session_token'] = $sessionToken;
+                                
+                                $stmt = $conn->prepare("INSERT INTO sessions (UserEmail, SessionID, DeviceName, IPAddress, CreatedAt, LastActive, IsActive) VALUES (?, ?, ?, ?, NOW(), NOW(), 1)");
+                                $stmt->bind_param("ssss", $userEmail, $sessionToken, $device, $ip);
+                                $stmt->execute();
 
                                 $cookie_name = "user_login";
                                 $cookie_value = $_SESSION['passed_user_email'];
@@ -125,6 +166,24 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
                             session_start();
                             $_SESSION['passed_user_email'] = EncryptSessionsandCookies($email);
 
+                            $login_success = 1;
+
+                            // Device and IP info
+                            $success = $login_success ? 1 : 0;
+
+                            // Log login attempt
+                            $stmt = $conn->prepare("INSERT INTO login_activity (UserEmail, IPAddress, DeviceName, Success) VALUES (?, ?, ?, ?)");
+                            $stmt->bind_param("sssi", $userEmail, $ip, $device, $success);
+                            $stmt->execute();
+
+                            $sessionToken = generateSessionToken();
+                            setcookie("user_session_token", $sessionToken, time() + (86400 * 7), "/"); // 7 days
+                            $_SESSION['user_session_token'] = $sessionToken;
+                            
+                            $stmt = $conn->prepare("INSERT INTO sessions (UserEmail, SessionID, DeviceName, IPAddress, CreatedAt, LastActive, IsActive) VALUES (?, ?, ?, ?, NOW(), NOW(), 1)");
+                            $stmt->bind_param("ssss", $userEmail, $sessionToken, $device, $ip);
+                            $stmt->execute();
+                            
                             $cookie_name = "user_login";
                             $cookie_value = $_SESSION['passed_user_email'];
                             setcookie($cookie_name, $cookie_value, time() + (86400 * 7), "/"); // 86400 = 1 day  
@@ -135,6 +194,16 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
                     } 
                     else {
                         // Invalid password
+
+                        $login_success = 0;
+
+                        // Device and IP info
+                        $success = $login_success ? 1 : 0;
+
+                        // Log login attempt
+                        $stmt = $conn->prepare("INSERT INTO login_activity (UserEmail, IPAddress, DeviceName, Success) VALUES (?, ?, ?, ?)");
+                        $stmt->bind_param("sssi", $userEmail, $ip, $device, $success);
+                        $stmt->execute();
 
                         $NewLockOutCount = $user['LockoutCount'] + 1;
 

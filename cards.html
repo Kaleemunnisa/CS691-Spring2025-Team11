@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass - Cards</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            padding-bottom: 100px;
+        }
+
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px 32px;
+            justify-content: flex-start;
+            background: none;
+        }
+
+        @media (max-width: 900px) {
+            .cards {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .credit-card {
+                width: 100%;
+                min-width: 0;
+                margin: 0 0 20px 0;
+                padding: 14px 6px;
+            }
+        }
+
+        .credit-card {
+            width: 340px;
+            height: 180px;
+            border-radius: 18px;
+            padding: 22px 26px 18px 26px;
+            background: linear-gradient(135deg, #3966a6 72%, #274060 100%);
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 30px;
+            transition: box-shadow 0.2s, background 0.3s;
+            overflow: hidden;
+            transition: box-shadow 0.22s cubic-bezier(0.4, 0.2, 0.2, 1), transform 0.19s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+
+        .credit-card:hover {
+            box-shadow: 0 16px 44px 0 rgba(50, 70, 120, 0.25), 0 4px 12px 0 rgba(30, 40, 70, 0.16);
+            transform: translateY(-6px) scale(1.02);
+            z-index: 5;
+            cursor: pointer;
+        }
+
+        .credit-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+
+        .credit-card .chip {
+            width: 38px;
+            height: 28px;
+            border-radius: 7px;
+            background: linear-gradient(135deg, #e3d7b9 30%, #c1b798 100%);
+            box-shadow: 0 1px 4px rgba(80, 80, 80, 0.2);
+            position: relative;
+        }
+
+        .credit-card .chip:after {
+            content: '';
+            display: block;
+            width: 60%;
+            height: 55%;
+            border-radius: 3px;
+            background: rgba(100, 100, 100, 0.11);
+            position: absolute;
+            top: 25%;
+            left: 20%;
+        }
+
+        .credit-card .visa {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #e3eefd;
+            letter-spacing: 2px;
+            background: #204081;
+            border-radius: 6px;
+            padding: 5px 19px 5px 13px;
+            align-self: flex-end;
+            box-shadow: 0 1px 6px rgba(30, 64, 129, 0.15);
+        }
+
+        .credit-card .card-details {
+            margin: 6px 0 0 0;
+            font-size: 1.22rem;
+            letter-spacing: 2.1px;
+            font-family: 'OCR A Std', monospace, 'Courier New', Courier, monospace;
+            color: #f5fafd;
+            text-shadow: 0 1px 1px #19345755;
+        }
+
+        .credit-card .details-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin: 10px 0 0 0;
+            font-size: 1rem;
+        }
+
+        .credit-card .details-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 80px;
+        }
+
+        .credit-card .label {
+            font-size: 0.8rem;
+            color: #bcd3ee;
+            letter-spacing: 1px;
+            margin-bottom: 0;
+            margin-right: 2px;
+            display: block;
+            line-height: 1.1;
+        }
+
+        .credit-card .value {
+            font-size: 1.03rem;
+            font-weight: 500;
+            color: #fff;
+            line-height: 1.1;
+        }
+
+        .btn-primary {
+            background-color: #e67e22;
+            border: none;
+        }
+
+        .footer {
+            background-color: #f4e1c6;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+        }
+
+        .modal-Text {
+            color: rgb(0, 0, 0);
+        }
+
+        .close {
+            color: rgb(0, 0, 0);
+        }
+
+        /* Dark Mode Styles */
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode .container {
+            background: none;
+        }
+
+        /* Dark mode styles for Bootstrap modal */
+        .dark-mode .modal-content {
+            background-color: #232323;
+            color: #fff;
+            border: none;
+        }
+
+        .dark-mode .modal-header,
+        .dark-mode .modal-footer {
+            background-color: #1e1e1e;
+            border-bottom: 1px solid #333;
+            border-top: 1px solid #333;
+        }
+
+        .dark-mode .modal-title {
+            color: #fff;
+        }
+
+        .dark-mode .modal-body {
+            background-color: #232323;
+            color: #e5e5e5;
+        }
+
+        .dark-mode .btn-secondary {
+            background-color: #323232;
+            color: #fff;
+            border: none;
+        }
+
+        .dark-mode .btn-secondary:hover,
+        .dark-mode .btn-secondary:focus {
+            background-color: #444;
+        }
+
+        .dark-mode .btn-success {
+            background-color: #27ae60;
+            color: #fff;
+            border: none;
+        }
+
+        .dark-mode .btn-success:hover,
+        .dark-mode .btn-success:focus {
+            background-color: #219150;
+        }
+
+        .dark-mode .credit-card {
+            background: linear-gradient(135deg, #22344d 68%, #1b2a47 100%);
+            color: #e3eefd;
+            box-shadow: 0 6px 28px rgba(20, 40, 80, 0.40);
+        }
+
+        .dark-mode .credit-card .label {
+            color: #a8b6c6;
+        }
+
+        .dark-mode .credit-card .visa {
+            background: #2c3c60;
+            color: #e3eefd;
+        }
+    </style>
+
+</head>
+
+<script>
+    // === SESSION CHECK (redirect to login if not logged in) ===
+    $(document).ready(function () {
+        $.ajax({
+            url: "API/check_and_maintain_session_and_cookies.php",
+            method: "POST",
+            dataType: "json",
+            success: function (response) {
+                if (response.message === "not_logged_in") {
+                    window.location.href = "login.html";
+                } else {
+                    initCardsPage();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Session Check Error:', xhr.responseText);
+            }
+        });
+    });
+</script>
+
+<body>
+    <nav class="navbar navbar-light bg-light p-3">
+        <a class="navbar-brand font-weight-bold" href="dashboard.html">🔒 SecurePass</a>
+        <input type="text" id="searchInput" class="form-control w-25" placeholder="Search Cards..."
+            onkeyup="searchCards()">
+        <button id="darkModeToggle" class="toggle-btn">
+            <i class="fas fa-moon"></i>
+        </button>
+    </nav>
+
+    <div class="container mt-4">
+        <button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addCardModal">Add New Card</button>
+        <div class="mb-3">
+            <select id="filterGroup" class="form-control w-25 d-inline-block">
+                <option value="all">All Groups</option>
+            </select>
+            <button class="btn btn-primary" onclick="filterCards()">Filter</button>
+        </div>
+        <div class="cards" id="cards">
+            <!-- Dynamic cards generated via JS -->
+        </div>
+    </div>
+
+    <!-- Add cards Modal -->
+    <div class="modal fade" id="addCardModal" tabindex="-1" role="dialog" aria-labelledby="addCardModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+
+                    <div class="addNewCard" id="addNewCard">
+
+                        <h5 class="text-center"> Add New Card </h5>
+
+                        <div id="addNewCardInfoMessage" class="alert alert-dismissible fade show"> </div>
+
+                        <div class="form-group">
+                            <label for="addNewGroup">Group</label>
+                            <select id="addNewGroup" class="form-control">
+                                <option selected="" disabled="">--- Select Group ---</option>
+                                <!-- Groups -->
+                                <option value="new">Add New Group</option>
+                            </select>
+                            <input type="text" class="form-control mt-2 d-none" id="addNewGroupCreate"
+                                placeholder="Enter new group name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="addNewCardNumber"> Card Number </label>
+                            <input type="text" class="form-control" pattern="^[0-9]{12}$" id="addNewCardNumber"
+                                maxlength="12" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="addNewCardHolderName">Card Holder Name</label>
+                            <input type="text" class="form-control" id="addNewCardHolderName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="addNewCardCVV">CVV</label>
+                            <input type="text" class="form-control" pattern="^[0-9]{3}$" id="addNewCardCVV"
+                                maxlength="3" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Expiry Date</label>
+                            <div class="form-row">
+                                <div class="col">
+                                    <input type="text" class="form-control" maxlength="2" placeholder="MM"
+                                        pattern="^(0[1-9]|1[0-2])$" name="addNewCardExpiry_month">
+                                </div>
+                                <div class="col">
+                                    <input type="text" class="form-control" maxlength="4" placeholder="YYYY"
+                                        pattern="^[0-9]{4}$" name="addNewCardExpiry_year">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Issue Date</label>
+                            <div class="form-row">
+                                <div class="col">
+                                    <input type="text" class="form-control" maxlength="2" placeholder="MM"
+                                        pattern="^(0[1-9]|1[0-2])$" name="addNewCardIssue_month">
+                                </div>
+                                <div class="col">
+                                    <input type="text" class="form-control" maxlength="4" placeholder="YYYY"
+                                        pattern="^[0-9]{4}$" name="addNewCardIssue_year">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="addNewCardType">Card Type</label>
+                            <select id="addNewCardType" class="form-control">
+                                <option selected="" disabled="">--- Select ---</option>
+                                <option value="credit">Credit</option>
+                                <option value="debit">Debit</option>
+                                <option value="prepaid">Prepaid</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="addNewCardProvider">Card Provider</label>
+                            <select id="addNewCardProvider" class="form-control">
+                                <option selected="" disabled="">--- Select ---</option>
+                                <option value="visa">VISA</option>
+                                <option value="rupay">RUPAY</option>
+                                <option value="american express">AMERICIAN EXPRESS</option>
+                                <option value="master card">MASTER CARD</option>
+                                <option value="new">Other</option>
+                            </select>
+                            <input type="text" class="form-control mt-2 d-none" id="addNewCardProviderCreate"
+                                placeholder="Enter other card provider name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="addNewCardNotes">Notes</label>
+                            <textarea class="form-control" id="addNewCardNotes" placeholder="Enter notes"></textarea>
+                        </div>
+
+                    </div>
+                    <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button id="addNewCardBtn" class="btn btn-primary">Add Card</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View/Edit Card Modal -->
+    <div class="modal fade" id="viewEditCardModal" tabindex="-1" role="dialog" aria-labelledby="viewEditCardModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                        id="closeViewEditCardModal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div id="viewEditCardForm">
+                        <h5 class="text-center mb-3" id="viewEditModalTitle">View Card</h5>
+                        <div id="viewEditCardInfoMessage" class="alert alert-dismissible fade show"
+                            style="display:none;"></div>
+
+                        <input type="hidden" id="editCardUniqueId">
+
+                        <div class="form-group">
+                            <label>Card Number</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="editCardNumber" readonly>
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="copyCardNumberBtn"><i
+                                            class="fa fa-copy"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Card Holder Name</label>
+                            <input type="text" class="form-control" id="editCardHolderName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>CVV</label>
+                            <input type="text" class="form-control" id="editCardCVV" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Expiry Date</label>
+                            <div class="form-row">
+                                <div class="col">
+                                    <input type="text" class="form-control" id="editCardExpiryMonth" maxlength="2"
+                                        placeholder="MM" readonly>
+                                </div>
+                                <div class="col">
+                                    <input type="text" class="form-control" id="editCardExpiryYear" maxlength="4"
+                                        placeholder="YYYY" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Issue Date</label>
+                            <div class="form-row">
+                                <div class="col">
+                                    <input type="text" class="form-control" id="editCardIssueMonth" maxlength="2"
+                                        placeholder="MM" readonly>
+                                </div>
+                                <div class="col">
+                                    <input type="text" class="form-control" id="editCardIssueYear" maxlength="4"
+                                        placeholder="YYYY" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="editCardType" class="form-control" disabled>
+                                <option value="credit">Credit</option>
+                                <option value="debit">Debit</option>
+                                <option value="prepaid">Prepaid</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Provider</label>
+                            <select id="editCardProvider" class="form-control" disabled>
+                                <option value="VISA">VISA</option>
+                                <option value="RUPAY">RUPAY</option>
+                                <option value="AMERICIAN EXPRESS">AMERICIAN EXPRESS</option>
+                                <option value="MASTER CARD">MASTER CARD</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <input type="text" class="form-control mt-2 d-none" id="editCardProviderOther"
+                                placeholder="Enter other card provider name" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea class="form-control" id="editCardNotes" rows="2" readonly></textarea>
+                        </div>
+                    </div>
+                    <div class="text-right mt-2" id="viewEditFooter">
+                        <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button class="btn btn-primary" id="editCardBtn">Edit</button>
+                        <button class="btn btn-success d-none" id="saveCardBtn">Save Card Details</button>
+                        <button class="btn btn-danger" id="deleteCardBtn">Delete</button>
+                        <button class="btn btn-danger d-none" id="cancelEditBtn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br></br>
+    <div class="footer">SecurePass © 2025</div>
+
+    <!-- Spinner Overlay -->
+    <div id="spinnerOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999; text-align:center;">
+        <div class="spinner-border text-primary" role="status" style="margin-top:20%;">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+    <script src="darkmode.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Show spinner on any AJAX start
+            $(document).ajaxStart(function () {
+                $('#spinnerOverlay').show();
+            });
+
+            // Hide spinner when all AJAX calls are done
+            $(document).ajaxStop(function () {
+                $('#spinnerOverlay').hide();
+            });
+        });
+
+        // Show spinner
+        $('#spinnerOverlay').show();
+
+        $(document).ready(function () {
+
+            function initCardsPage() {
+                let allCards = [];
+                let allGroups = [];
+
+                // Fetch cards from API
+                function fetchCards() {
+                    $.ajax({
+                        url: 'API/cards.php',
+                        method: 'POST',
+                        data: { action: 'fetch' },
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+                                allCards = response.data;
+                                renderCards();
+                                updateGroupFilter();
+                            }
+                        }
+                    });
+                }
+
+                // Render cards to the #cards div
+                function renderCards(filtered = null) {
+                    let cardsArr = filtered || allCards;
+                    let $cards = $('#cards');
+                    $cards.empty();
+
+                    if (cardsArr.length === 0) {
+                        $cards.html('<div class="text-muted">No cards found.</div>');
+                        return;
+                    }
+
+                    cardsArr.forEach((card, idx) => {
+                        let f = card.Fields || {};
+                        let provider = (f.CardProvider || '').toUpperCase();
+                        let cardNumber = (f.CardNumber || '').replace(/.(?=.{4})/g, '*');
+                        let expiry = f.ExpiryDate || '--/----';
+
+                        $cards.append(`
+                    <div class="credit-card" data-idx="${idx}" data-uniqueid="${card.UniqueId}">
+                        <div class="card-header">
+                            <div class="chip"></div>
+                            <div class="visa">${provider}</div>
+                        </div>
+                        <div class="card-details">
+                            ${cardNumber}
+                        </div>
+                        <div class="details-row">
+                            <div class="details-col">
+                                <span class="label">Card Holder</span>
+                                <span class="value">${f.CardHolderName || ''}</span>
+                            </div>
+                            <div class="details-col">
+                                <span class="label">Expired</span>
+                                <span class="value">${expiry}</span>
+                            </div>
+                            <div class="details-col">
+                                <span class="label">CVV</span>
+                                <span class="value">${f.CVV || ''}</span>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                    });
+                }
+
+                // Update Group filter select
+                function updateGroupFilter() {
+                    let groupSet = new Set(allCards.map(c => c.GroupName));
+                    let $filter = $('#filterGroup');
+                    $filter.empty();
+                    $filter.append('<option value="all">All Groups</option>');
+                    groupSet.forEach(g => $filter.append(`<option value="${g}">${g}</option>`));
+
+                    // Also update addNewGroup options (except "Add New Group" and disabled)
+                    let $addNewGroup = $('#addNewGroup');
+                    let currentValue = $addNewGroup.val();
+                    $addNewGroup.empty();
+                    $addNewGroup.append('<option selected="" disabled="">--- Select Group ---</option>');
+                    groupSet.forEach(g => $addNewGroup.append(`<option value="${g}">${g}</option>`));
+                    $addNewGroup.append('<option value="new">Add New Group</option>');
+                    if (currentValue) $addNewGroup.val(currentValue);
+                }
+
+                // Add Card
+                $('#addNewCardBtn').click(function () {
+                    let group = $('#addNewGroup').val() === 'new'
+                        ? $('#addNewGroupCreate').val().trim()
+                        : $('#addNewGroup').val();
+                    let cardName = $('#addNewCardHolderName').val().trim() + " Card";
+                    let notes = $('#addNewCardNotes').val();
+
+                    let fieldsObj = {
+                        CardType: $('#addNewCardType').val(),
+                        CardProvider: $('#addNewCardProvider').val() === 'new'
+                            ? $('#addNewCardProviderCreate').val().trim()
+                            : $('#addNewCardProvider').val(),
+                        CardNumber: $('#addNewCardNumber').val(),
+                        CardHolderName: $('#addNewCardHolderName').val(),
+                        ExpiryDate:
+                            $('input[name="addNewCardExpiry_month"]').val().padStart(2, '0') + "/" +
+                            $('input[name="addNewCardExpiry_year"]').val(),
+                        IssueDate:
+                            $('input[name="addNewCardIssue_month"]').val().padStart(2, '0') + "/" +
+                            $('input[name="addNewCardIssue_year"]').val(),
+                        CVV: $('#addNewCardCVV').val()
+                    };
+
+                    if (!group || !fieldsObj.CardNumber || !fieldsObj.CardHolderName || !fieldsObj.CVV) {
+                        $('#addNewCardInfoMessage').removeClass('alert-success').addClass('alert-danger').text('Please fill all required fields.');
+                        return;
+                    }
+
+                    $.ajax({
+                        url: 'API/cards.php',
+                        method: 'POST',
+                        data: {
+                            action: 'add',
+                            GroupName: group,
+                            CardName: cardName,
+                            Fields: JSON.stringify(fieldsObj),
+                            Notes: notes
+                        },
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+                                $('#addNewCardInfoMessage').removeClass('alert-danger').addClass('alert-success').text('Card added!');
+                                $('#addCardModal').modal('hide');
+                                setTimeout(() => {
+                                    $('#addNewCard input, #addNewCard textarea').val('');
+                                    $('#addNewCardInfoMessage').text('');
+                                }, 400);
+                                fetchCards();
+                            } else {
+                                $('#addNewCardInfoMessage').removeClass('alert-success').addClass('alert-danger').text('Error adding card.');
+                            }
+                        },
+                        error: function () {
+                            $('#addNewCardInfoMessage').removeClass('alert-success').addClass('alert-danger').text('Error adding card.');
+                        }
+                    });
+                });
+
+                // Handle group dropdown (show new group input if needed)
+                $('#addNewGroup').change(function () {
+                    if ($(this).val() === 'new') {
+                        $('#addNewGroupCreate').removeClass('d-none');
+                    } else {
+                        $('#addNewGroupCreate').addClass('d-none');
+                    }
+                });
+
+                // Handle card provider dropdown (show new provider input if needed)
+                $('#addNewCardProvider').change(function () {
+                    if ($(this).val() === 'new') {
+                        $('#addNewCardProviderCreate').removeClass('d-none');
+                    } else {
+                        $('#addNewCardProviderCreate').addClass('d-none');
+                    }
+                });
+
+                // Filter cards by group
+                $('#filterGroup').change(function () {
+                    let group = $(this).val();
+                    if (group === 'all') {
+                        renderCards();
+                    } else {
+                        renderCards(allCards.filter(c => c.GroupName === group));
+                    }
+                });
+
+                // Search cards (case-insensitive)
+                $('#searchInput').on('input', function () {
+                    let input = $(this).val().toLowerCase();
+                    $('.credit-card').each(function () {
+                        if ($(this).text().toLowerCase().includes(input)) {
+                            $(this).show();
+                        } else {
+                            $(this).hide();
+                        }
+                    });
+                });
+
+                // ----- View/Edit Card Modal -----
+
+                // Click on card opens modal in view mode
+                $('#cards').on('click', '.credit-card', function () {
+                    let idx = $(this).data('idx');
+                    let card = allCards[idx];
+                    let f = card.Fields || {};
+
+                    // Fill modal fields
+                    $('#editCardUniqueId').val(card.UniqueId);
+                    $('#editCardNumber').val(f.CardNumber || '').prop('readonly', true);
+                    $('#editCardHolderName').val(f.CardHolderName || '').prop('readonly', true);
+                    $('#editCardCVV').val(f.CVV || '').prop('readonly', true);
+
+                    let [expiryMM, expiryYYYY] = (f.ExpiryDate || '').split('/');
+                    $('#editCardExpiryMonth').val(expiryMM || '').prop('readonly', true);
+                    $('#editCardExpiryYear').val(expiryYYYY || '').prop('readonly', true);
+
+                    let [issueMM, issueYYYY] = (f.IssueDate || '').split('/');
+                    $('#editCardIssueMonth').val(issueMM || '').prop('readonly', true);
+                    $('#editCardIssueYear').val(issueYYYY || '').prop('readonly', true);
+
+                    $('#editCardType').val((f.CardType || '').toLowerCase()).prop('disabled', true);
+                    let cardProv = (f.CardProvider || '').toUpperCase();
+                    $('#editCardProvider').val(['VISA', 'RUPAY', 'AMERICIAN EXPRESS', 'MASTER CARD'].includes(cardProv) ? cardProv : 'other').prop('disabled', true);
+                    if (['VISA', 'RUPAY', 'AMERICIAN EXPRESS', 'MASTER CARD'].includes(cardProv)) {
+                        $('#editCardProviderOther').addClass('d-none').prop('readonly', true).val('');
+                    } else {
+                        $('#editCardProviderOther').removeClass('d-none').prop('readonly', true).val(f.CardProvider || '');
+                    }
+                    $('#editCardNotes').val(card.Notes || '').prop('readonly', true);
+
+                    // View mode UI
+                    $('#viewEditModalTitle').text('View Card');
+                    $('#editCardBtn').removeClass('d-none');
+                    $('#saveCardBtn, #cancelEditBtn').addClass('d-none');
+                    $('#deleteCardBtn').removeClass('d-none');
+                    $('#viewEditCardInfoMessage').hide();
+
+                    $('#viewEditCardModal').modal('show');
+                });
+
+                // Edit mode: make all fields editable
+                $('#editCardBtn').click(function () {
+                    $('#editCardNumber, #editCardHolderName, #editCardCVV, #editCardExpiryMonth, #editCardExpiryYear, #editCardIssueMonth, #editCardIssueYear, #editCardNotes')
+                        .prop('readonly', false);
+                    $('#editCardType, #editCardProvider').prop('disabled', false);
+
+                    if ($('#editCardProvider').val() === 'other') {
+                        $('#editCardProviderOther').removeClass('d-none').prop('readonly', false);
+                    }
+
+                    $('#viewEditModalTitle').text('Edit Card');
+                    $('#editCardBtn').addClass('d-none');
+                    $('#saveCardBtn, #cancelEditBtn').removeClass('d-none');
+                    $('#deleteCardBtn').addClass('d-none');
+                });
+
+                // Provider 'other' editable in edit mode
+                $('#editCardProvider').change(function () {
+                    if ($(this).val() === 'other') {
+                        $('#editCardProviderOther').removeClass('d-none').prop('readonly', false);
+                    } else {
+                        $('#editCardProviderOther').addClass('d-none').prop('readonly', true).val('');
+                    }
+                });
+
+                // Cancel edit: close modal (or reload card if you want to revert)
+                $('#cancelEditBtn').click(function () {
+                    $('#viewEditCardModal').modal('hide');
+                });
+
+                // Save Card Edits
+                $('#saveCardBtn').click(function () {
+                    let uniqueId = $('#editCardUniqueId').val();
+                    let cardNumber = $('#editCardNumber').val().trim();
+                    let cardHolder = $('#editCardHolderName').val().trim();
+                    let cvv = $('#editCardCVV').val().trim();
+                    let expiry = $('#editCardExpiryMonth').val().padStart(2, '0') + '/' + $('#editCardExpiryYear').val();
+                    let issue = $('#editCardIssueMonth').val().padStart(2, '0') + '/' + $('#editCardIssueYear').val();
+                    let cardType = $('#editCardType').val();
+                    let cardProvider = $('#editCardProvider').val() === 'other'
+                        ? $('#editCardProviderOther').val().trim()
+                        : $('#editCardProvider').val();
+                    let notes = $('#editCardNotes').val();
+
+                    let fieldsObj = {
+                        CardType: cardType,
+                        CardProvider: cardProvider,
+                        CardNumber: cardNumber,
+                        CardHolderName: cardHolder,
+                        ExpiryDate: expiry,
+                        IssueDate: issue,
+                        CVV: cvv
+                    };
+
+                    if (!cardNumber || !cardHolder || !cvv) {
+                        $('#viewEditCardInfoMessage').removeClass('alert-success').addClass('alert-danger').text('Please fill all required fields.').show();
+                        return;
+                    }
+
+                    $.ajax({
+                        url: 'API/cards.php',
+                        method: 'POST',
+                        data: {
+                            action: 'edit',
+                            UniqueId: uniqueId,
+                            Fields: JSON.stringify(fieldsObj),
+                            Notes: notes
+                        },
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+                                $('#viewEditCardInfoMessage').removeClass('alert-danger').addClass('alert-success').text('Card details updated!').show();
+                                fetchCards();
+                                setTimeout(() => {
+                                    $('#viewEditCardModal').modal('hide');
+                                }, 800);
+                            } else {
+                                $('#viewEditCardInfoMessage').removeClass('alert-success').addClass('alert-danger').text('Error saving card.').show();
+                            }
+                        },
+                        error: function () {
+                            $('#viewEditCardInfoMessage').removeClass('alert-success').addClass('alert-danger').text('Error saving card.').show();
+                        }
+                    });
+                });
+
+                // Copy card number
+                $('#copyCardNumberBtn').click(function () {
+                    let $number = $('#editCardNumber');
+                    $number[0].select();
+                    document.execCommand('copy');
+                    $(this).blur();
+                    // Optional: show a message/snackbar
+                });
+
+                // Delete card
+                $('#deleteCardBtn').click(function () {
+                    if (!confirm('Are you sure you want to delete this card?')) return;
+                    let uniqueId = $('#editCardUniqueId').val();
+                    $.ajax({
+                        url: 'API/cards.php',
+                        method: 'POST',
+                        data: { action: 'delete', UniqueId: uniqueId },
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.success) {
+                                fetchCards();
+                                $('#viewEditCardModal').modal('hide');
+                            } else {
+                                $('#viewEditCardInfoMessage').removeClass('alert-success').addClass('alert-danger').text('Error deleting card.').show();
+                            }
+                        },
+                        error: function () {
+                            $('#viewEditCardInfoMessage').removeClass('alert-success').addClass('alert-danger').text('Error deleting card.').show();
+                        }
+                    });
+                });
+
+                // Initial fetch
+                fetchCards();
+            }
+        });
+
+    </script>
+</body>
+
+</html>

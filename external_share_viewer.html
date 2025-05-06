@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass - Shared Item Viewer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .card {
+            background: #ffffff;
+            border-left: 5px solid #007bff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background-color: #e67e22;
+            border: none;
+        }
+
+        .footer {
+            background-color: #f4e1c6;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .alert-danger {
+            margin-top: 30px;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+        }
+
+        .modal-Text {
+            color: rgb(0, 0, 0);
+        }
+
+        .close {
+            color: rgb(0, 0, 0);
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        .dark-mode .card {
+            background: #1e1e1e;
+            color: white;
+            border-left: 5px solid #3399ff;
+        }
+
+        .dark-mode .footer {
+            background-color: #333;
+        }
+
+        .dark-mode .modal-content {
+            background-color: #1e1e1e;
+        }
+
+        .dark-mode .modal-Text {
+            color: rgb(255, 255, 255);
+        }
+
+        .dark-mode .close {
+            color: rgb(255, 255, 255);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-light bg-light p-3">
+        <a class="navbar-brand font-weight-bold" href="dashboard.html">🔒 SecurePass</a>
+        <button id="darkModeToggle" class="toggle-btn">
+            <i class="fas fa-moon"></i>
+        </button>
+    </nav>
+
+    <div class="container mt-4">
+        <div id="itemContainer"></div>
+    </div>
+    <br></br>
+
+    <div class="footer">SecurePass © 2025</div>
+
+    <!-- Spinner Overlay -->
+    <div id="spinnerOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999; text-align:center;">
+        <div class="spinner-border text-primary" role="status" style="margin-top:20%;">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+
+    <script src="darkmode.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Show spinner on any AJAX start
+            $(document).ajaxStart(function () {
+                $('#spinnerOverlay').show();
+            });
+
+            // Hide spinner when all AJAX calls are done
+            $(document).ajaxStop(function () {
+                $('#spinnerOverlay').hide();
+            });
+        });
+
+        // Show spinner
+        $('#spinnerOverlay').show();
+
+
+        $(function () {
+            // Extract share_uuid from URL
+            function getQueryVar(name) {
+                let m = new RegExp("[?&]" + name + "=([^&#]*)").exec(window.location.search);
+                return m ? decodeURIComponent(m[1]) : null;
+            }
+            const share_uuid = getQueryVar("share_uuid");
+            if (!share_uuid) {
+                $("#itemContainer").html('<div class="alert alert-danger">Missing share link.</div>');
+                return;
+            }
+
+            // Fetch item from backend
+            $.ajax({
+                url: "API/view_external_share.php",
+                method: "GET",
+                data: { share_uuid: share_uuid },
+                dataType: "json",
+                success: function (res) {
+                    if (!res.success) {
+                        $("#itemContainer").html('<div class="alert alert-danger">' + (res.error || "Invalid or expired share link.") + '</div>');
+                        return;
+                    }
+                    const item = res.data;
+                    let iconType = {
+                        password: 'fa-key',
+                        note: 'fa-sticky-note',
+                        contact: 'fa-address-book',
+                        card: 'fa-credit-card'
+                    }[item.vault_type] || 'fa-share-alt';
+
+                    let fieldsHtml = '';
+                    if (item.vault_type === "password") {
+                        fieldsHtml = `
+                            <li><strong>Username:</strong> ${item.Username || ''}</li>
+                            <li>
+                                <strong>Password:</strong> 
+                                <span id="passwordVal" style="letter-spacing: 3px;">••••••••</span>
+                                <button id="togglePasswordBtn" class="btn btn-sm btn-outline-secondary ml-2">
+                                    <i id="eyeIcon" class="fa fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary ml-2" onclick="navigator.clipboard.writeText('${item.Password || ''}')">
+                                    <i class="fa fa-copy"></i>
+                                </button>
+                            </li>
+                            <li><strong>URL:</strong> <a href="${item.Url || '#'}" target="_blank">${item.Url || ''}</a></li>
+                            <li><strong>Notes:</strong> ${item.Notes || ''}</li>
+                        `;
+                    } else if (item.vault_type === "note") {
+                        fieldsHtml = `
+                            <li><strong>Title:</strong> ${item.Title || ''}</li>
+                            <li><strong>Content:</strong><br><pre>${item.NoteContent || ''}</pre></li>
+                        `;
+                    } else if (item.vault_type === "contact") {
+                        fieldsHtml = `
+                            <li><strong>Name:</strong> ${item.FirstName || ''} ${item.LastName || ''}</li>
+                            <li><strong>Phone:</strong> ${item.Phone || ''}</li>
+                            <li><strong>Email:</strong> ${item.Email || ''}</li>
+                            <li><strong>Address:</strong> ${item.Address || ''}</li>
+                            <li><strong>Notes:</strong> ${item.Notes || ''}</li>
+                        `;
+                    } else if (item.vault_type === "card") {
+                        fieldsHtml = `
+                            <li><strong>Card Name:</strong> ${item.CardName || ''}</li>
+                            <li><strong>Number:</strong> ${item.CardNumber || ''}</li>
+                            <li><strong>Expiry:</strong> ${item.ExpiryDate || ''}</li>
+                            <li><strong>CVV:</strong> ${item.CVV || ''}</li>
+                            <li><strong>Notes:</strong> ${item.Notes || ''}</li>
+                        `;
+                    }
+
+                    let expiryInfo = (item.no_expiry == 1 || item.no_expiry === "1") ? "No Expiry" : ("Expires: " + (item.expiry_at || "N/A"));
+
+                    let html = `
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <h4 class="card-title">
+                                    <i class="fas ${iconType}"></i>
+                                    ${item.account_name || 'Shared Item'}
+                                    <span class="badge badge-info ml-2">${item.vault_type.toUpperCase()}</span>
+                                </h4>
+                                <ul class="list-unstyled mt-3">${fieldsHtml}</ul>
+                                <hr>
+                                <div class="text-muted small">
+                                    Shared by: <b>${item.owner_email}</b><br>
+                                    ${expiryInfo}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    $("#itemContainer").html(html);
+
+                    $("#togglePasswordBtn").click(function () {
+                        const span = $("#passwordVal");
+                        const icon = $("#eyeIcon");
+                        const actualPassword = `${item.Password || ''}`;
+
+                        if (span.text().includes("•")) {
+                            span.text(actualPassword);
+                            icon.removeClass("fa-eye").addClass("fa-eye-slash");
+                            span.css("letter-spacing", "0px");
+                        } else {
+                            span.text("••••••••");
+                            icon.removeClass("fa-eye-slash").addClass("fa-eye");
+                            span.css("letter-spacing", "3px");
+                        }
+                    });
+                },
+                error: function () {
+                    $("#itemContainer").html('<div class="alert alert-danger">Error loading share link.</div>');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

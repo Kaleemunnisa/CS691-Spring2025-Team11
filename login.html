@@ -58,6 +58,26 @@
         }
     </style>
 </head>
+<script>
+    // send request to check sessions
+    $(document).ready(function () {
+        $.ajax({
+            url: "API/check_and_maintain_session_and_cookies.php",
+            method: "POST",
+            dataType: "json",
+            success: function (response) {
+                if (response.message === "logged_in") {
+                    window.location.href = "dashboard.html";
+                } else {
+                    initPage();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', xhr.responseText);
+            }
+        });
+    });
+</script>
 
 <body>
 
@@ -107,57 +127,83 @@
 
     <div class="footer">SecurePass © 2025</div>
 
+    <!-- Spinner Overlay -->
+    <div id="spinnerOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999; text-align:center;">
+        <div class="spinner-border text-primary" role="status" style="margin-top:20%;">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+
     <script src="darkmode.js"></script>
+    <script src="collect_info.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/platform/1.3.6/platform.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.0.0-beta.1/jsencrypt.min.js"></script>
     <script>
-        let publicKey = '';
 
-        // Load Config File
-        function loadConfig() {
-            return fetch('config.env')
-                .then(response => response.text())
-                .then(text => {
-                    let lines = text.split('\n');
-                    for (let line of lines) {
-                        let [key, value] = line.split('=').map(s => s.trim());
-                        if (key === 'RSAPUBLICKEY') {
-                            let publicKey = value.replace(/['"]/g, ''); // Remove quotes if present
-                            return publicKey; // Return the key
-                        }
-                    }
-                    throw new Error("RSAPUBLICKEY not found in config.env");
-                })
-                .catch(error => console.error('Error loading config:', error));
-        }
-
-        // Now, use the returned value:
-        loadConfig().then(publicKey => {
-            console.log("RSAPUBLICKEY:", publicKey);
-
-            // Toggle password visibility
-            $('#togglePassword').click(function () {
-                const passwordField = $('#password');
-                const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
-                passwordField.attr('type', type);
-                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        $(document).ready(function () {
+            // Show spinner on any AJAX start
+            $(document).ajaxStart(function () {
+                $('#spinnerOverlay').show();
             });
 
-            // if 2fa is initiated
-            let currentURL = window.location.href;
-            var userLoginCard = document.getElementById("userLoginCard");
-            var twofaAuthCard = document.getElementById("2faAuthCard");
+            // Hide spinner when all AJAX calls are done
+            $(document).ajaxStop(function () {
+                $('#spinnerOverlay').hide();
+            });
+        });
 
-            if (currentURL.includes("twofactorvalidation=true")) {
-                twofaAuthCard.style.display = "block";
-                userLoginCard.style.display = "none";
-            }
-            else {
-                twofaAuthCard.style.display = "none";
-                userLoginCard.style.display = "block";
+        // Load this script after session is authenticated
+        function initPage() {
+
+            let publicKey = '';
+
+            // Load Config File
+            function loadConfig() {
+                return fetch('config.env')
+                    .then(response => response.text())
+                    .then(text => {
+                        let lines = text.split('\n');
+                        for (let line of lines) {
+                            let [key, value] = line.split('=').map(s => s.trim());
+                            if (key === 'RSAPUBLICKEY') {
+                                let publicKey = value.replace(/['"]/g, ''); // Remove quotes if present
+                                return publicKey; // Return the key
+                            }
+                        }
+                        throw new Error("RSAPUBLICKEY not found in config.env");
+                    })
+                    .catch(error => console.error('Error loading config:', error));
             }
 
-            // send login data
-            $(document).ready(function () {
+            // Now, use the returned value:
+            loadConfig().then(publicKey => {
+                console.log("RSAPUBLICKEY:", publicKey);
+
+                // Toggle password visibility
+                $('#togglePassword').click(function () {
+                    const passwordField = $('#password');
+                    const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+                    passwordField.attr('type', type);
+                    $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+                });
+
+                // if 2fa is initiated
+                let currentURL = window.location.href;
+                var userLoginCard = document.getElementById("userLoginCard");
+                var twofaAuthCard = document.getElementById("2faAuthCard");
+
+                if (currentURL.includes("twofactorvalidation=true")) {
+                    twofaAuthCard.style.display = "block";
+                    userLoginCard.style.display = "none";
+                }
+                else {
+                    twofaAuthCard.style.display = "none";
+                    userLoginCard.style.display = "block";
+                }
+
+                // send login data
                 $('#login').on('click', function () {
                     // Get form data
                     const useremailid = $('#useremail').val();
@@ -169,61 +215,65 @@
                     const encryptedUseremailid = encryptor.encrypt(useremailid);
                     const encryptedUserpassword = encryptor.encrypt(userpassword);
 
-                    var formData = {
-                        username: encryptedUseremailid,
-                        password: encryptedUserpassword,
-                    };
+                    // Get IP and device info before sending AJAX
+                    getPublicIPInfo().then(function (ipData) {
+                        let dev = getBrowserDeviceInfo();
+                        var formData = {
+                            username: encryptedUseremailid,
+                            password: encryptedUserpassword,
+                            public_ip: ipData && ipData.ip ? ipData.ip : '',
+                            device_info: dev.browser + ' / ' + dev.os + ' / ' + dev.device
+                        };
 
-                    $.ajax({
-                        type: 'POST',
-                        url: 'API/login.php',
-                        data: formData,
-                        dataType: 'json',
-                        success: function (response) {
-                            console.log('Response received:', response);
+                        $.ajax({
+                            type: 'POST',
+                            url: 'API/login.php',
+                            data: formData,
+                            dataType: 'json',
+                            success: function (response) {
+                                console.log('Response received:', response);
 
-                            if (response.success) {
-                                if (response.message == 'twofactorvalidation=true') {
+                                if (response.success) {
+                                    if (response.message == 'twofactorvalidation=true') {
 
-                                    console.log(response.twofauseremail);
+                                        console.log(response.twofauseremail);
+                                        console.log(response.message);
+
+                                        history.replaceState(null, "", currentURL + "?" + "twofactorvalidation=true");
+                                        $('#2faAuthEmail').append(response.twofauseremail + "<br>");
+                                        twofaAuthCard.style.display = "block";
+                                        userLoginCard.style.display = "none";
+                                    }
+                                    if (response.message == 'Your account has been Locked out, Please reset your password using forgot password.') {
+
+                                    }
+                                    if (response.message == 'Invalid password') {
+                                        $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Entered Password is Invalid').show();
+                                    }
+                                    if (response.message == 'User Deleted') {
+                                        $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('User Deleted').show();
+                                    }
+                                    if (response.message == 'User locked') {
+                                        $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('User locked').show();
+                                    }
+                                    if (response.message == 'User not found') {
+                                        $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('User not found').show();
+                                    }
+                                    if (response.message == 'Login Success') {
+                                        window.location.href = "dashboard.html";
+                                    }
+                                } else {
                                     console.log(response.message);
-
-                                    history.replaceState(null, "", currentURL + "?" + "twofactorvalidation=true");
-                                    $('#2faAuthEmail').append(response.twofauseremail + "<br>");
-                                    twofaAuthCard.style.display = "block";
-                                    userLoginCard.style.display = "none";
                                 }
-                                if (response.message == 'Your account has been Locked out, Please reset your password using forgot password.') {
-
-                                }
-                                if (response.message == 'Invalid password') {
-                                    $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('Entered Password is Invalid').show();
-                                }
-                                if (response.message == 'User Deleted') {
-                                    $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('User Deleted').show();
-                                }
-                                if (response.message == 'User locked') {
-                                    $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('User locked').show();
-                                }
-                                if (response.message == 'User not found') {
-                                    $('#LoginPageInfoMessage').removeClass('alert-success').addClass('alert-danger').html('User not found').show();
-                                }
-                                if (response.message == 'Login Success') {
-                                    window.location.href = "dashboard.html";
-                                }
-                            } else {
-                                console.log(response.message);
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Error:', xhr.responseText);
                             }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error:', xhr.responseText);
-                        }
+                        });
                     });
                 });
-            });
 
-            // send 2fa code data
-            $(document).ready(function () {
+                // send 2fa code data
                 $('#validateOTP').on('click', function () {
                     // Get form data
                     const twofacode = $('#2facode').val();
@@ -233,55 +283,42 @@
                     encryptor.setPublicKey(publicKey);
                     const encryptedTwofaCode = encryptor.encrypt(twofacode);
 
-                    var formData = {
-                        validateTwofaCode: encryptedTwofaCode,
-                    };
+                    // Get IP and device info before sending AJAX
+                    getPublicIPInfo().then(function (ipData) {
+                        let dev = getBrowserDeviceInfo();
+                        var formData = {
+                            validateTwofaCode: encryptedTwofaCode,
+                            public_ip: ipData && ipData.ip ? ipData.ip : '',
+                            device_info: dev.browser + ' / ' + dev.os + ' / ' + dev.device
+                        };
 
-                    $.ajax({
-                        type: 'POST',
-                        url: 'API/login_2fa_validation.php',
-                        data: formData,
-                        dataType: 'json',
-                        success: function (response) {
-                            console.log('Response received:', response);
+                        $.ajax({
+                            type: 'POST',
+                            url: 'API/login_2fa_validation.php',
+                            data: formData,
+                            dataType: 'json',
+                            success: function (response) {
+                                console.log('Response received:', response);
 
-                            if (response.success) {
-                                if (response.message == 'twofactorvalidation=success') {
-                                    window.location.href = "dashboard.html";
+                                if (response.success) {
+                                    if (response.message == 'twofactorvalidation=success') {
+                                        window.location.href = "dashboard.html";
+                                    }
+                                } else {
+                                    console.log(response.message);
+                                    if (response.message == 'Entered Two Factor Authentication Code is Invalid') {
+                                        $('#InfoMessage').removeClass('alert-success').addClass('alert-danger').html('Entered 2FA Code is Invalid').show();
+                                    }
                                 }
-                            } else {
-                                console.log(response.message);
-                                if (response.message == 'Entered Two Factor Authentication Code is Invalid') {
-                                    $('#InfoMessage').removeClass('alert-success').addClass('alert-danger').html('Entered 2FA Code is Invalid').show();
-                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Error:', xhr.responseText);
                             }
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error:', xhr.responseText);
-                        }
+                        });
                     });
                 });
             });
-
-            // send request to check sessions
-            $(document).ready(function () {
-                $.ajax({
-                    url: "API/check_and_maintain_session_and_cookies.php",
-                    method: "POST",
-                    dataType: "json",
-                    success: function (response) {
-                        if (response.message === "logged_in") {
-                            window.location.href = "dashboard.html";
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('Error:', xhr.responseText);
-                    }
-                });
-            });
-
-        });
-
+        }
     </script>
 </body>
 

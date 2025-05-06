@@ -1,10 +1,15 @@
 <?php
 
 include 'myfunctions.php';
+include 'sql_conn.php';
 
 if (isset($_SESSION['twofa_check_user_email'])) {
 
-    include 'sql_conn.php';
+    // Device and IP info
+    $userEmail = $_SESSION['twofa_check_user_email'];
+    $device = isset($_POST['device_info']) ? $_POST['device_info'] : $_SERVER['HTTP_USER_AGENT'];
+    $ip = isset($_POST['public_ip']) ? $_POST['public_ip'] : $_SERVER['REMOTE_ADDR'];
+
     // Handle 2FA logic
 
     if (isset($_POST['validateTwofaCode'])) {
@@ -28,7 +33,23 @@ if (isset($_SESSION['twofa_check_user_email'])) {
 
         if($LoginCode == $otp2fa){
 
+            $login_success = 1;
+            // Device and IP info
+            $success = $login_success ? 1 : 0;
+            // Log login attempt
+            $stmt = $conn->prepare("INSERT INTO login_activity (UserEmail, IPAddress, DeviceName, Success) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("sssi", $userEmail, $ip, $device, $success);
+            $stmt->execute();
+
             // Login, start session and redirect to home
+            $sessionToken = generateSessionToken();
+            setcookie("user_session_token", $sessionToken, time() + (86400 * 7), "/"); // 7 days
+            $_SESSION['user_session_token'] = $sessionToken;
+            
+            $stmt = $conn->prepare("INSERT INTO sessions (UserEmail, SessionID, DeviceName, IPAddress, CreatedAt, LastActive, IsActive) VALUES (?, ?, ?, ?, NOW(), NOW(), 1)");
+            $stmt->bind_param("ssss", $userEmail, $sessionToken, $device, $ip);
+            $stmt->execute();
+
             $_SESSION['passed_user_email'] = EncryptSessionsandCookies($check_passed_email);
 
             $cookie_name = "user_login";

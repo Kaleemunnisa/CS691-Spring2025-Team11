@@ -10,10 +10,60 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             background-color: #f8f9fa;
             transition: background-color 0.3s, color 0.3s;
+        }
+
+        .security-check-spinner {
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        .security-check-done {
+            background: #27ae60 !important;
+            color: white !important;
+            animation: checkPulse 1.2s;
+        }
+
+        @keyframes checkPulse {
+            0% {
+                box-shadow: 0 0 0 0 #27ae6050;
+            }
+
+            80% {
+                box-shadow: 0 0 0 8px #27ae6000;
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 #27ae6000;
+            }
+        }
+
+        .dashboard-card {
+            background: #ffffff;
+            color: #212529;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .dashboard-card .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: bold;
+        }
+
+        .dashboard-card .card-body {
+            color: #212529;
+        }
+
+        .dashboard-card .list-group-item {
+            background: transparent;
+            border: none;
+            padding-left: 0;
         }
 
         .sidebar {
@@ -65,6 +115,67 @@
             color: #ffffff;
         }
 
+        .dark-mode .dashboard-card {
+            background: #1e1e1e;
+            color: #ffffff;
+            box-shadow: 0px 2px 5px rgba(255, 255, 255, 0.05);
+        }
+
+        .dark-mode .dashboard-card .card-header {
+            background-color: #2c2c2c;
+            color: #ffffff;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .dark-mode .dashboard-card .card-body {
+            color: #e0e0e0;
+        }
+
+        .dark-mode .dashboard-card .list-group-item {
+            background: transparent;
+            color: #cccccc;
+        }
+
+        .dark-mode .dashboard-card .btn-outline-primary {
+            border-color: #3399ff;
+            color: #3399ff;
+        }
+
+        .dark-mode .dashboard-card .btn-outline-primary:hover {
+            background-color: #3399ff;
+            color: #121212;
+        }
+
+        .dark-mode .dashboard-card .btn-outline-success {
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .dark-mode .dashboard-card .btn-outline-success:hover {
+            background-color: #28a745;
+            color: #ffffff;
+        }
+
+        .dark-mode .dashboard-card .btn-outline-secondary {
+            border-color: #cccccc;
+            color: #cccccc;
+        }
+
+        .dark-mode .dashboard-card .btn-outline-secondary:hover {
+            background-color: #cccccc;
+            color: #121212;
+        }
+
+        .dark-mode .dashboard-card .btn-outline-warning {
+            border-color: #ffc107;
+            color: #ffc107;
+        }
+
+        .dark-mode .dashboard-card .btn-outline-warning:hover {
+            background-color: #ffc107;
+            color: #121212;
+        }
+
         .dark-mode .sidebar {
             background: #1e1e1e;
         }
@@ -77,8 +188,133 @@
             background-color: #e67e22;
             color: white;
         }
+
+        /* Dark mode styles for Bootstrap modal */
+        .dark-mode .modal-content {
+            background-color: #232323;
+            color: #fff;
+            border: none;
+        }
+
+        .dark-mode .modal-header,
+        .dark-mode .modal-footer {
+            background-color: #1e1e1e;
+            border-bottom: 1px solid #333;
+            border-top: 1px solid #333;
+        }
+
+        .dark-mode .modal-title {
+            color: #fff;
+        }
+
+        .dark-mode .modal-body {
+            background-color: #232323;
+            color: #e5e5e5;
+        }
+
+        .dark-mode .btn-secondary {
+            background-color: #323232;
+            color: #fff;
+            border: none;
+        }
+
+        .dark-mode .btn-secondary:hover,
+        .dark-mode .btn-secondary:focus {
+            background-color: #444;
+        }
+
+        .dark-mode .btn-success {
+            background-color: #27ae60;
+            color: #fff;
+            border: none;
+        }
+
+        .dark-mode .btn-success:hover,
+        .dark-mode .btn-success:focus {
+            background-color: #219150;
+        }
+
+        /* --- Dark mode fixes for Import Vault - Map Columns modal --- */
+        .dark-mode .modal-content {
+            background-color: #232323;
+            color: #fff;
+            border: none;
+        }
+
+        .dark-mode .modal-header,
+        .dark-mode .modal-footer {
+            background-color: #1e1e1e;
+            border-bottom: 1px solid #333;
+            border-top: 1px solid #333;
+        }
+
+        .dark-mode .modal-title {
+            color: #fff;
+        }
+
+        .dark-mode .modal-body {
+            background-color: #232323;
+            color: #e5e5e5;
+        }
+
+        /* Fixes for the mapping table in the modal */
+        .dark-mode .modal-body .table {
+            background-color: transparent;
+            color: #e5e5e5;
+        }
+
+        .dark-mode .modal-body .table thead th {
+            background-color: #1e1e1e;
+            color: #fff;
+            border-color: #333;
+        }
+
+        .dark-mode .modal-body .table tbody td {
+            background-color: transparent;
+            color: #e5e5e5;
+            border-color: #333;
+        }
+
+        .dark-mode .modal-body select.form-control {
+            background-color: #292929;
+            color: #fff;
+            border-color: #444;
+        }
+
+        .dark-mode .modal-body select.form-control:focus {
+            background-color: #353535;
+            color: #fff;
+            border-color: #666;
+            box-shadow: none;
+        }
+
+        .dark-mode #importVaultMappingError,
+        .dark-mode #importVaultUploadError {
+            color: #ff7373;
+        }
     </style>
 </head>
+
+<script>
+    // === SESSION CHECK (redirect to login if not logged in) ===
+    $(document).ready(function () {
+        $.ajax({
+            url: "API/check_and_maintain_session_and_cookies.php",
+            method: "POST",
+            dataType: "json",
+            success: function (response) {
+                if (response.message === "not_logged_in") {
+                    window.location.href = "login.html";
+                } else {
+                    initPage();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', xhr.responseText);
+            }
+        });
+    });
+</script>
 
 <body>
     <nav class="navbar navbar-light bg-light p-3">
@@ -96,56 +332,716 @@
         <a href="#" data-toggle="collapse" data-target="#passwordMenu">🔒 Vault <i class="fas fa-chevron-down"></i></a>
         <div id="passwordMenu" class="collapse pl-3">
             <a href="passwords.html">🔑 Passwords</a>
-            <a href="#">📝 Notes</a>
-            <a href="#">📖 Address Book</a>
-            <a href="#">💳 Cards</a>
+            <a href="notes.html">📝 Notes</a>
+            <a href="addressbook.html">📖 Address Book</a>
+            <a href="cards.html">💳 Cards</a>
         </div>
         <a href="#" data-toggle="collapse" data-target="#sharingcenterMenu">📤 Sharing Center <i
                 class="fas fa-chevron-down"></i></a>
         <div id="sharingcenterMenu" class="collapse pl-3">
-            <a href="#">👥 Shared with me</a>
-            <a href="#">🔄 Shared with others</a>
-            <a href="#">🌐 Shared externally</a>
+            <a href="shared_with_me.html">👥 Shared with me</a>
+            <a href="shared_with_others.html">🔄 Shared with others</a>
+            <a href="shared_externally.html">🌐 Shared externally</a>
         </div>
+        <a href="trash.html">🗑️ Trash</a>
         <a href="#" data-toggle="collapse" data-target="#settingsMenu">⚙️ Settings <i
                 class="fas fa-chevron-down"></i></a>
         <div id="settingsMenu" class="collapse pl-3">
-            <a href="#">👤 Profile</a>
-            <a href="#">🔐 Security</a>
+            <!-- <a href="profile.html">👤 Profile</a> -->
+            <a href="security.html">🔐 Security</a>
             <a href="API/logout.php">🚪 Logout</a>
         </div>
     </div>
 
     <div class="content" id="content">
-        <h2>Welcome to the Dashboard</h2>
-        <p>Here you can manage your passwords and settings efficiently.</p>
+
+        <!--
+            <h2>Welcome to the Dashboard</h2>
+            <p>Here you can manage your passwords and settings efficiently.</p>
+        -->
+
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Section 1: Password Health Pie Chart -->
+                <div class="col-md-6 p-2">
+                    <div class="card dashboard-card h-100">
+                        <div class="card-header font-weight-bold">Password Health</div>
+                        <div class="card-body d-flex justify-content-center align-items-center">
+                            <canvas id="passwordHealthChart" width="200" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Audit Logs -->
+                <div class="col-md-6 p-2">
+                    <div class="card dashboard-card h-100">
+                        <div class="card-header font-weight-bold d-flex justify-content-between">
+                            Audit Logs
+                            <a href="audit.html" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="card-body">
+                            <ul id="auditLogList" class="list-group small">
+                                <!-- Recent log items will be inserted here via JS -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Security Insights -->
+                <div class="col-md-6 p-2">
+                    <div class="card dashboard-card h-100">
+                        <div class="card-header font-weight-bold">Security Insights</div>
+                        <div class="card-body">
+                            <ul class="list-group small" id="securityInsightsList">
+                                <!-- Dynamic entry will be inserted here -->
+                            </ul>
+                            <button id="showLatestSecurityResultsBtn" class="btn btn-outline-info mt-2"
+                                style="display:none;">
+                                Show Latest Results
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Quick Actions -->
+                <div class="col-md-6 p-2">
+                    <div class="card dashboard-card h-100">
+                        <div class="card-header font-weight-bold">Quick Actions</div>
+                        <div class="card-body d-flex flex-column gap-2">
+                            <button class="btn btn-outline-success mb-2">➕ Add New Password</button>
+                            <button id="exportVaultBtn" class="btn btn-outline-secondary mb-2">📤 Export Vault</button>
+                            <button id="importVaultBtn" class="btn btn-outline-secondary mb-2">📥 Import Vault</button>
+                            <button id="securityCheckupBtn" class="btn btn-outline-warning">⚠️ Security Checkup</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
     </div>
+    <br></br>
+
+
+    <!-- Trust This Device Modal -->
+    <div class="modal fade" id="trustDeviceModal" tabindex="-1" role="dialog" aria-labelledby="trustDeviceModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="trustDeviceModalLabel">Trust This Device?</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Would you like to trust this device? This will let you skip two-factor authentication for future
+                        logins on this device.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="trustDeviceYes" class="btn btn-success">Yes</button>
+                    <button type="button" id="trustDeviceNo" class="btn btn-secondary" data-dismiss="modal">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Security Checkup Result Modal -->
+    <div class="modal fade" id="securityCheckResultModal" tabindex="-1" role="dialog"
+        aria-labelledby="securityCheckResultLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="securityCheckResultLabel">Security Checkup Results</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="securityCheckResultBody" style="max-height: 350px; overflow-y: auto;">
+                    <!-- Results will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Export Vault Modal -->
+    <div class="modal fade" id="exportVaultModal" tabindex="-1" role="dialog" aria-labelledby="exportVaultModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exportVaultModalLabel">Export in Progress</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Data export for password Vault has begun. Upon successful export you will receive the exported
+                        file via email.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Vault Modal: Step 1 - Upload -->
+    <div class="modal fade" id="importVaultModal" tabindex="-1" role="dialog" aria-labelledby="importVaultModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importVaultModalLabel">Import Vault - Upload File</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <input type="file" id="importVaultFile" accept=".csv" class="form-control mb-2">
+                    <div id="importVaultUploadError" class="text-danger mb-2"></div>
+                    <button id="importVaultUploadBtn" class="btn btn-primary btn-block" disabled>Next: Map
+                        Columns</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Vault Modal: Step 2 - Field Mapping -->
+    <div class="modal fade" id="importVaultMappingModal" tabindex="-1" role="dialog"
+        aria-labelledby="importVaultMappingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content p-3">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importVaultMappingModalLabel">Import Vault - Map Columns</h5>
+                    <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <form id="mappingForm">
+                        <div id="importMappingTable"></div>
+                        <div id="importVaultMappingError" class="text-danger mb-2"></div>
+                    </form>
+                    <button id="startImportBtn" class="btn btn-success btn-block mt-2">Start Import</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
 
     <div class="footer">SecurePass © 2025</div>
 
+    <!-- Spinner Overlay -->
+    <div id="spinnerOverlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999; text-align:center;">
+        <div class="spinner-border text-primary" role="status" style="margin-top:20%;">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+
+
     <script src="darkmode.js"></script>
+    <script src="collect_info.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/platform/1.3.6/platform.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
     <script>
+        // === GLOBAL SPINNER ON AJAX ===
+        $(document).ready(function () {
+            $(document).ajaxStart(function () {
+                $('#spinnerOverlay').show();
+            });
+            $(document).ajaxStop(function () {
+                $('#spinnerOverlay').hide();
+            });
+        });
+
+        // === SIDEBAR TOGGLE ===
         $("#toggleSidebar").click(function () {
             $("#sidebar").toggleClass("collapsed");
             $("#content").toggleClass("expanded");
         });
 
-        // send request to check sessions
-        $(document).ready(function () {
-            $.ajax({
-                url: "API/check_and_maintain_session_and_cookies.php",
-                method: "POST",
-                dataType: "json",
-                success: function (response) {
-                    if (response.message === "not_logged_in") {
-                        window.location.href = "login.html";
-                    }
+        // === DASHBOARD PIE CHART AND SECURITY CHECKUP LOGIC ===
+
+        let passwordHealthChart; // Chart.js instance
+
+        // --- State management for security check ---
+        const SECCHK_FLAG = "securityCheckInProgress";
+        const SECCHK_READY = "securityCheckReady";
+        const SECCHK_LAST = "securityCheckLastResults";
+
+        function setSecurityCheckInProgress(state) { localStorage.setItem(SECCHK_FLAG, state ? "1" : "0"); }
+        function isSecurityCheckInProgress() { return localStorage.getItem(SECCHK_FLAG) === "1"; }
+        function setSecurityCheckReady(state) { localStorage.setItem(SECCHK_READY, state ? "1" : "0"); }
+        function isSecurityCheckReady() { return localStorage.getItem(SECCHK_READY) === "1"; }
+        function setSecurityCheckResults(data) { localStorage.setItem(SECCHK_LAST, JSON.stringify(data)); }
+        function getSecurityCheckResults() { try { return JSON.parse(localStorage.getItem(SECCHK_LAST)); } catch { return null; } }
+
+        // --- Helper: Summarize Security Results ---
+        function getSecuritySummary(results) {
+            let total = results.length;
+            let leaked = results.filter(r => r.status === "LEAK_FOUND").length;
+            let safe = results.filter(r => r.status === "NO_LEAK").length;
+            let weak = results.filter(r => r.status === "PENDING").length; // You can improve logic for "Weak" if desired
+            let lastChecked = results.reduce((latest, r) =>
+                (r.last_checked && (!latest || new Date(r.last_checked) > new Date(latest))) ? r.last_checked : latest
+                , null);
+            return { total, leaked, safe, weak, lastChecked };
+        }
+
+        // --- Human-friendly "ago" time function ---
+        function timeAgo(dateString) {
+            if (!dateString) return '';
+            let date = new Date(dateString.replace(' ', 'T'));
+            let now = new Date();
+            let diff = Math.floor((now - date) / 1000); // in seconds
+            if (diff < 60) return diff + " seconds ago";
+            if (diff < 3600) return Math.floor(diff / 60) + " min ago";
+            if (diff < 86400) return Math.floor(diff / 3600) + " hours ago";
+            return Math.floor(diff / 86400) + " days ago";
+        }
+
+        // --- Chart.js PIE CHART SETUP AND UPDATE ---
+        function updatePasswordHealthChart() {
+            let results = getSecurityCheckResults();
+            let compromised = 0, weak = 0, good = 0;
+            if (results && Array.isArray(results) && results.length > 0) {
+                let summary = getSecuritySummary(results);
+                compromised = summary.leaked;
+                weak = summary.weak;
+                good = summary.safe;
+            }
+            if (passwordHealthChart) {
+                passwordHealthChart.data.datasets[0].data = [compromised, weak, good];
+                passwordHealthChart.update();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Pie Chart
+            const ctx = document.getElementById('passwordHealthChart').getContext('2d');
+            passwordHealthChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Compromised', 'Weak', 'Good'],
+                    datasets: [{
+                        label: 'Password Health',
+                        data: [0, 0, 0], // Dynamic
+                        backgroundColor: ['#dc3545', '#ffc107', '#28a745']
+                    }]
                 },
-                error: function (xhr, status, error) {
-                    console.error('Error:', xhr.responseText);
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true, position: 'bottom' }
+                    }
                 }
             });
+
+            // Audit log dummy example
+            const logs = [
+                "Logged in from new device",
+                "Edited 'Facebook Account'",
+                "Deleted note 'Bank PIN'",
+                "Viewed password for 'Gmail'",
+            ];
+            const logList = document.getElementById('auditLogList');
+            logs.forEach(log => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = log;
+                logList.appendChild(li);
+            });
+
+            // Initial chart/data sync
+            updatePasswordHealthChart();
+            maybeShowLatestResultsButton();
+            updateSecurityInsightsLeakedPasswords();
         });
+
+        // --- Security Check Modal, Button, Insights Logic ---
+        function disableSecurityCheckButton(spinnerText = "Checking...") {
+            $("#securityCheckupBtn")
+                .attr("disabled", true)
+                .html('<span class="spinner-border spinner-border-sm security-check-spinner"></span>' + spinnerText);
+        }
+        function enableSecurityCheckButton(text = "⚠️ Security Checkup") {
+            $("#securityCheckupBtn")
+                .removeAttr("disabled")
+                .html(text);
+        }
+        function showModalMessage(message) {
+            $('#securityCheckResultBody').html(`<div class='alert alert-info'>${message}</div>`);
+            $('#securityCheckResultModal').modal('show');
+        }
+        function showSecurityCheckResultsModal(results) {
+            let html = "";
+            let found = false;
+            let summary = getSecuritySummary(results);
+            let scanTime = summary.lastChecked ? timeAgo(summary.lastChecked) : "Unknown";
+            // --- Summary at the top ---
+            html += `<div class="alert alert-secondary">
+        <b>Security Check Summary</b><br>
+        Passwords checked: <b>${summary.total}</b> &nbsp;|&nbsp;
+        Safe: <b class="text-success">${summary.safe}</b> &nbsp;|&nbsp;
+        Leaked: <b class="text-danger">${summary.leaked}</b><br>
+        <span class="text-muted" style="font-size:0.95em;">Last check: ${scanTime}</span>
+    </div>`;
+            // --- Individual results ---
+            for (let res of results) {
+                if (res.status === 'LEAK_FOUND') {
+                    found = true;
+                    html += `<div class="alert alert-danger mb-2"><b>${res.AppName}</b> (${res.UserName}):<br>
+            <span>Password leaked <b>${res.leak_count}</b> times in public breaches!</span></div>`;
+                } else if (res.status === 'NO_LEAK') {
+                    html += `<div class="alert alert-success mb-2"><b>${res.AppName}</b> (${res.UserName}):<br>
+            <span>Password is safe.</span></div>`;
+                } else if (res.status === 'PENDING') {
+                    html += `<div class="alert alert-warning mb-2"><b>${res.AppName}</b> (${res.UserName}):<br>
+            <span>Check in progress...</span></div>`;
+                }
+            }
+            if (!found && summary.leaked === 0) {
+                html += "<div class='alert alert-success'>No leaks found for any of your accounts.</div>";
+            }
+            $('#securityCheckResultBody').html(html);
+            $('#securityCheckResultModal').modal('show');
+        }
+
+        // Polling function
+        let securityCheckPollInterval = null;
+        function pollSecurityCheckResults() {
+            disableSecurityCheckButton("Checking...");
+            setSecurityCheckInProgress(true);
+            setSecurityCheckReady(false);
+
+            $.get('api/password_leak_scan_status.php', function (resp) {
+                if (!resp.success) {
+                    enableSecurityCheckButton();
+                    showModalMessage("Unable to check scan status. Please try again.");
+                    setSecurityCheckInProgress(false);
+                    return;
+                }
+                setSecurityCheckResults(resp.results);
+
+                if (resp.pending) {
+                    securityCheckPollInterval = setTimeout(pollSecurityCheckResults, 4000);
+                } else {
+                    setSecurityCheckInProgress(false);
+                    setSecurityCheckReady(true);
+                    enableSecurityCheckButton();
+                    maybeShowLatestResultsButton();
+                    updatePasswordHealthChart();
+                    updateSecurityInsightsLeakedPasswords();
+                }
+            });
+        }
+
+        // Initial state setup on page load
+        $(document).ready(function () {
+            if (isSecurityCheckInProgress()) {
+                disableSecurityCheckButton("Checking...");
+                showModalMessage("Security check is currently running. Results will be available here when done.");
+                pollSecurityCheckResults();
+            } else {
+                enableSecurityCheckButton();
+            }
+        });
+
+        // Button click logic
+        $('#securityCheckupBtn').off('click').on('click', function () {
+            if (isSecurityCheckInProgress()) {
+                showModalMessage("Security check is already running. Results will be available here when done.");
+                return;
+            }
+            $('#securityInsightsList .leaked-passwords-summary').remove();
+            localStorage.removeItem(SECCHK_LAST); // clear results before starting new scan
+            setSecurityCheckInProgress(true);
+            setSecurityCheckReady(false);
+            maybeShowLatestResultsButton();
+            disableSecurityCheckButton("Starting...");
+            $.post('api/start_password_leak_scan.php', {}, function (startResp) {
+                if (!startResp.success) {
+                    enableSecurityCheckButton();
+                    showModalMessage("Failed to start security check: " + (startResp.message || ""));
+                    setSecurityCheckInProgress(false);
+                    return;
+                }
+                showModalMessage("Security check has started! You can continue using SecurePass. This may take some time. " +
+                    "After it's finished, you can view your results using the Show Latest Results button.");
+                pollSecurityCheckResults();
+            }, 'json').fail(function () {
+                enableSecurityCheckButton();
+                showModalMessage("Failed to start security check (server error).");
+                setSecurityCheckInProgress(false);
+            });
+        });
+
+        $('#securityCheckResultModal').on('hidden.bs.modal', function () {
+            enableSecurityCheckButton();
+            maybeShowLatestResultsButton();
+            updateSecurityInsightsLeakedPasswords();
+            updatePasswordHealthChart();
+        });
+
+        // Show/hide "Show Latest Results" and update Security Insights summary
+        function maybeShowLatestResultsButton() {
+            let results = getSecurityCheckResults();
+            if (results && Array.isArray(results) && results.length > 0) {
+                $('#showLatestSecurityResultsBtn').show();
+                let summary = getSecuritySummary(results);
+                let scanTime = summary.lastChecked ? timeAgo(summary.lastChecked) : "Unknown";
+                let html = `
+            <div class="alert alert-info p-2 mb-1" style="font-size:0.97em;">
+                <b>Last Security Check:</b> ${scanTime}<br>
+                <b>Safe:</b> <span class="text-success">${summary.safe}</span> &nbsp;|&nbsp; 
+                <b>Leaked:</b> <span class="text-danger">${summary.leaked}</span>
+            </div>
+        `;
+                updateSecurityInsightsLeakedPasswords();
+                $('#securityInsightsSummary').html(html);
+            } else {
+                $('#showLatestSecurityResultsBtn').hide();
+                $('#securityInsightsSummary').html("");
+            }
+        }
+
+        $(document).ready(function () {
+            maybeShowLatestResultsButton();
+            updateSecurityInsightsLeakedPasswords();
+            updatePasswordHealthChart();
+        });
+
+        $('#showLatestSecurityResultsBtn').off('click').on('click', function () {
+            let results = getSecurityCheckResults();
+            if (results) {
+                showSecurityCheckResultsModal(results);
+            } else {
+                showModalMessage("No previous results available.");
+            }
+        });
+
+        function updateSecurityInsightsLeakedPasswords() {
+            let results = getSecurityCheckResults();
+            $('#securityInsightsList .leaked-passwords-summary').remove();
+            if (results && Array.isArray(results) && results.length > 0) {
+                let summary = getSecuritySummary(results);
+                let text = `${summary.leaked} leaked password${summary.leaked === 1 ? "" : "s"}`;
+                let li = `<li class="list-group-item leaked-passwords-summary">${text}</li>`;
+                $('#securityInsightsList').prepend(li);
+            }
+        }
+
+        // Load this script after session is authenticated
+        function initPage() {
+
+            // === EXPORT PASSWORD VAULT MODAL LOGIC ===
+            $(document).ready(function () {
+                $('#exportVaultBtn').off('click').on('click', function () {
+                    // Show the export modal immediately
+                    $('#exportVaultModal').modal('show');
+
+                    // Send AJAX request to start export
+                    $.ajax({
+                        url: 'API/export_vault.php',
+                        method: 'POST',
+                        data: { Export: 1 },
+                        dataType: 'json',
+                        success: function (response) {
+                            // Optional: Show result, but usually we just let user wait for email.
+                            // If you want to update the modal with more info, you can do it here:
+                            // if(response.success) {...} else {...}
+                        },
+                        error: function (xhr, status, error) {
+                            // Optional: Let user know if something failed
+                            // $("#exportVaultModal .modal-body").append("<div class='alert alert-danger mt-2'>Export failed. Try again later.</div>");
+                        }
+                    });
+                });
+            });
+
+            // === IMPORT PASSWORD VAULT MODAL LOGIC ===
+            $(document).ready(function () {
+                // 1. Show import modal
+                $('#importVaultBtn').on('click', function () {
+                    $('#importVaultUploadError').text('');
+                    $('#importVaultFile').val('');
+                    $('#importVaultModal').modal('show');
+                });
+
+                // When file is selected, enable the button
+                $('#importVaultFile').on('change', function () {
+                    let file = this.files[0];
+                    if (file) {
+                        // Try parsing with PapaParse to check if valid CSV
+                        Papa.parse(file, {
+                            complete: function (results) {
+                                if (results.data && results.data.length && results.data[0].length > 1) {
+                                    $('#importVaultUploadBtn').prop('disabled', false);
+                                    $('#importVaultUploadError').text('');
+                                } else {
+                                    $('#importVaultUploadBtn').prop('disabled', true);
+                                    $('#importVaultUploadError').text('Invalid or empty CSV file.');
+                                }
+                            },
+                            error: function () {
+                                $('#importVaultUploadBtn').prop('disabled', true);
+                                $('#importVaultUploadError').text('Error reading the CSV file.');
+                            },
+                            skipEmptyLines: true
+                        });
+                    } else {
+                        $('#importVaultUploadBtn').prop('disabled', true);
+                        $('#importVaultUploadError').text('');
+                    }
+                });
+
+                // On modal open, always reset button state
+                $('#importVaultBtn').on('click', function () {
+                    $('#importVaultUploadBtn').prop('disabled', true);
+                    $('#importVaultUploadError').text('');
+                    $('#importVaultFile').val('');
+                });
+
+                // 2. Read CSV and show mapping UI
+                $('#importVaultUploadBtn').on('click', function () {
+                    let file = $('#importVaultFile')[0].files[0];
+                    if (!file) {
+                        $('#importVaultUploadError').text('Please select a CSV file.');
+                        return;
+                    }
+
+                    Papa.parse(file, {
+                        complete: function (results) {
+                            let data = results.data;
+                            if (!data.length) {
+                                $('#importVaultUploadError').text('CSV file is empty.');
+                                return;
+                            }
+                            let cleanHeader = data[0].map(h => (h || '').replace(/(^["']|["']$)/g, '').trim());
+                            // ...rest of the mapping UI code, unchanged, but use cleanHeader...
+                            // [Insert code for generating dropdowns using cleanHeader as options, as before]
+                            let requiredFields = [
+                                { field: 'GroupName', label: 'Group Name' },
+                                { field: 'AppName', label: 'App Name' },
+                                { field: 'UserName', label: 'Username' },
+                                { field: 'Password', label: 'Password' },
+                                { field: 'Url', label: 'Url' },
+                                { field: 'Notes', label: 'Notes' }
+                            ];
+                            let html = `<table class="table table-bordered"><thead><tr><th>Dest Column</th><th>Source Column</th></tr></thead><tbody>`;
+                            requiredFields.forEach(f => {
+                                html += `<tr>
+                    <td>${f.label} <input type="hidden" name="dest[]" value="${f.field}"></td>
+                    <td>
+                        <select name="src[]" class="form-control">
+                            <option value="">-- Do not import --</option>
+                            ${cleanHeader.map(h => `<option value="${h}">${h}</option>`).join('')}
+                        </select>
+                    </td>
+                </tr>`;
+                            });
+                            html += `</tbody></table>`;
+                            $('#importMappingTable').html(html);
+                            $('#importVaultMappingError').text('');
+                            $('#importVaultModal').modal('hide');
+                            $('#importVaultMappingModal').modal('show');
+                            // Save parsed CSV data to global variable for later import
+                            window.importVaultCSVRows = data;
+                        },
+                        skipEmptyLines: true
+                    });
+                });
+
+                // 3. Start Import
+                $('#startImportBtn').on('click', function () {
+                    let dest = [];
+                    let src = [];
+                    $('#mappingForm select').each(function () {
+                        src.push($(this).val());
+                    });
+                    $('#mappingForm input[type="hidden"]').each(function (i) {
+                        dest.push($(this).val());
+                    });
+
+                    // Validate: At least one field must be mapped
+                    if (src.every(s => !s)) {
+                        $('#importVaultMappingError').text('Please map at least one column.');
+                        return;
+                    }
+
+                    // Prepare mapping
+                    let mapping = {};
+                    dest.forEach((d, i) => {
+                        if (src[i]) mapping[d] = src[i];
+                    });
+
+                    // Send data to backend
+                    $.ajax({
+                        url: "API/import_vault.php",
+                        method: "POST",
+                        data: JSON.stringify({
+                            csv: window.importVaultCSVRows,
+                            mapping: mapping
+                        }),
+                        contentType: "application/json",
+                        dataType: "json",
+                        success: function (resp) {
+                            if (resp.success) {
+                                $('#importVaultMappingModal').modal('hide');
+                                alert('Import successful!');
+                            } else {
+                                $('#importVaultMappingError').text(resp.message || 'Import failed.');
+                            }
+                        },
+                        error: function () {
+                            $('#importVaultMappingError').text('Import failed due to server error.');
+                        }
+                    });
+                });
+            });
+
+
+            // === TRUST DEVICE MODAL LOGIC ===
+            function getCookie(name) {
+                let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+                return match ? decodeURIComponent(match[2]) : null;
+            }
+
+            $(document).ready(function () {
+                if (!getCookie('trusted_device') && !sessionStorage.getItem('trustDevicePromptShown')) {
+                    $('#trustDeviceModal').modal({ backdrop: 'static', keyboard: false });
+                    sessionStorage.setItem('trustDevicePromptShown', '1');
+                }
+            });
+
+            $('#trustDeviceYes').click(function () {
+                var deviceName = platform.name + ' ' + platform.version + ' on ' + platform.os.family;
+
+                getPublicIPInfo().then(function (ipData) {
+                    var formData = {
+                        action: 'add_trusted_device',
+                        device_name: deviceName,
+                        public_ip: ipData && ipData.ip ? ipData.ip : ''
+                    };
+
+                    $.post('API/update_security_settings.php', formData, function (res) {
+                        if (res.success) {
+                            $('#trustDeviceModal').modal('hide');
+                            sessionStorage.setItem('trustDevicePromptShown', '1');
+                        } else {
+                            alert('Failed to trust device: ' + res.message);
+                        }
+                    }, 'json');
+                });
+            });
+
+            $('#trustDeviceNo').click(function () {
+                $('#trustDeviceModal').modal('hide');
+                sessionStorage.setItem('trustDevicePromptShown', '1');
+            });
+
+        }
     </script>
 </body>
 
