@@ -527,9 +527,10 @@
         // Show spinner
         $('#spinnerOverlay').show();
 
-        $(document).ready(function () {
+        function initCardsPage() {
 
-            function initCardsPage() {
+            $(document).ready(function () {
+
                 let allCards = [];
                 let allGroups = [];
 
@@ -874,8 +875,8 @@
 
                 // Initial fetch
                 fetchCards();
-            }
-        });
+            });
+        }
 
     </script>
 </body>
