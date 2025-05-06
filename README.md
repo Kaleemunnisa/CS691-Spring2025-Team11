@@ -39,15 +39,5 @@ A password manager is a tool that assists users in creating, managing, and safel
   - Encrypted backup & restore functionality to prevent data loss.
 
 
-## System Architecture
-
-## Implementation
-
-- Register Page
-![image](https://github.com/user-attachments/assets/b273eb7e-5ee0-4ae9-8883-85d6940ee8de)
-
-- Login Page
-![image](https://github.com/user-attachments/assets/8f157019-bd2d-476d-a719-2aeb73f983c6)
-
-- Forgot Password Page
-![image](https://github.com/user-attachments/assets/f94551ab-e9e7-427e-8f52-07b2abe959fd)
+## Demo Site
+Click on [SecurePass](https://secure-pass.in) to go to demo website.
